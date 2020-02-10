@@ -8,18 +8,31 @@ task {
     groundtruth_path: "/sdcard/mlperf_datasets/imagenet/imagenet_val.txt"
   }
   model {
-    name: "MobileNets-v1 224 Uint8"
-    src: "https://github.com/mlperf/mobile_app/raw/model_repo_v0.5/tflite/mobilenet_v1_1.0_224_quant.tflite"
-    path: "/sdcard/mlperf_datasets/imagenet/mobilenet_v1_1.0_224_quant.tflite"
+    name: "MobileNets-v1 224 Int8"
+    src: "https://github.com/mlperf/mobile_app/raw/model_repo_v0.5/tflite/mobilenet_v1_224_full-integer.tflite"
+    path: "/sdcard/mlperf_datasets/mobilenet_v1_224_full-integer.tflite"
+    num_inputs: 1
+    num_outputs: 1
     offset: 1
-    tags: "uint8"
+    tags: "int8"
   }
   model {
-    name: "MobileNets-v1 224 Float"
+    name: "MobileNets-v1 224 F32"
     src: "https://github.com/mlperf/mobile_app/raw/model_repo_v0.5/tflite/mobilenet_v1_1.0_224.tflite"
     path: "/sdcard/mlperf_datasets/imagenet/mobilenet_v1_1.0_224.tflite"
     offset: 1
-    tags: "float"
+    num_inputs: 1
+    num_outputs: 1
+    tags: "float32"
+  }
+  model {
+    name: "MobileNets-v1 224 F16"
+    src: "https://github.com/mlperf/mobile_app/raw/model_repo_v0.5/tflite/mobilenet_v1_224_f16.tflite"
+    path: "/sdcard/mlperf_datasets/mobilenet_v1_224_f16.tflite"
+    offset: 1
+    num_inputs: 1
+    num_outputs: 1
+    tags: "float16"
   }
   min_query_count: 100
   min_duration_ms: 1000
@@ -35,18 +48,31 @@ task {
     groundtruth_path: "/sdcard/mlperf_datasets/coco/coco_val.pbtxt"
   }
   model {
-    name: "SSD-MobileNets-v1 Uint8"
-    src: "https://github.com/mlperf/mobile_app/raw/model_repo_v0.5/tflite/coco_ssd_mobilenet_v1_1.0_quant.tflite"
-    path: "/sdcard/mlperf_datasets/coco/coco_ssd_mobilenet_v1_1.0_quant.tflite"
+    name: "SSD-MobileNets-v1 Int8"
+    src: "https://github.com/mlperf/mobile_app/raw/model_repo_v0.5/tflite/ssd_mobilenet_v1_300_full-integer.tflite"
+    path: "/sdcard/mlperf_datasets/ssd_mobilenet_v1_300_full-integer.tflite"
+    num_inputs: 1
+    num_outputs: 4
     offset: 1
-    tags: "uint8"
+    tags: "int8"
   }
   model {
-    name: "SSD-MobileNets-v1 Float"
-    src: "https://github.com/mlperf/mobile_app/raw/model_repo_v0.5/tflite/coco_ssd_mobilenet_v1_1.0.tflite"
-    path: "/sdcard/mlperf_datasets/coco/coco_ssd_mobilenet_v1_1.0.tflite"
+    name: "SSD-MobileNets-v1 F32"
+    src: "https://github.com/mlperf/mobile_app/raw/model_repo_v0.5/tflite/ssd_mobilenet_v1_300_f32.tflite"
+    path: "/sdcard/mlperf_datasets/ssd_mobilenet_v1_300_f32.tflite"
+    num_inputs: 1
+    num_outputs: 4
     offset: 1
-    tags: "float"
+    tags: "float32"
+  }
+  model {
+    name: "SSD-MobileNets-v1 F16"
+    src: "https://github.com/mlperf/mobile_app/raw/model_repo_v0.5/tflite/ssd_mobilenet_v1_300_f16.tflite"
+    path: "/sdcard/mlperf_datasets/ssd_mobilenet_v1_300_f16.tflite"
+    num_inputs: 1
+    num_outputs: 4
+    offset: 1
+    tags: "float16"
   }
   min_query_count: 100
   min_duration_ms: 1000
