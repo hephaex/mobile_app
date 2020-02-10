@@ -59,3 +59,14 @@ jobs:
       with:
         api-level: 26
         script: bash .github/workflows/run_test.sh
+
+  lint:
+    name: Lint check
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1
+      with:
+        fetch-depth: 1
+
+    - name: Check lint
+      uses: docker://thaink/code_lint:latest
