@@ -11,8 +11,6 @@ task {
     name: "MobileNets-v1 224 Int8"
     src: "https://github.com/mlperf/mobile_app/raw/model_repo_v0.5/tflite/mobilenet_v1_224_full-integer.tflite"
     path: "/sdcard/mlperf_datasets/mobilenet_v1_224_full-integer.tflite"
-    num_inputs: 1
-    num_outputs: 1
     offset: 1
     tags: "int8"
   }
@@ -21,8 +19,6 @@ task {
     src: "https://github.com/mlperf/mobile_app/raw/model_repo_v0.5/tflite/mobilenet_v1_1.0_224.tflite"
     path: "/sdcard/mlperf_datasets/imagenet/mobilenet_v1_1.0_224.tflite"
     offset: 1
-    num_inputs: 1
-    num_outputs: 1
     tags: "float32"
   }
   model {
@@ -30,8 +26,6 @@ task {
     src: "https://github.com/mlperf/mobile_app/raw/model_repo_v0.5/tflite/mobilenet_v1_224_f16.tflite"
     path: "/sdcard/mlperf_datasets/mobilenet_v1_224_f16.tflite"
     offset: 1
-    num_inputs: 1
-    num_outputs: 1
     tags: "float16"
   }
   min_query_count: 100
@@ -51,8 +45,6 @@ task {
     name: "SSD-MobileNets-v1 Int8"
     src: "https://github.com/mlperf/mobile_app/raw/model_repo_v0.5/tflite/ssd_mobilenet_v1_300_full-integer.tflite"
     path: "/sdcard/mlperf_datasets/ssd_mobilenet_v1_300_full-integer.tflite"
-    num_inputs: 1
-    num_outputs: 4
     offset: 1
     tags: "int8"
   }
@@ -60,8 +52,6 @@ task {
     name: "SSD-MobileNets-v1 F32"
     src: "https://github.com/mlperf/mobile_app/raw/model_repo_v0.5/tflite/ssd_mobilenet_v1_300_f32.tflite"
     path: "/sdcard/mlperf_datasets/ssd_mobilenet_v1_300_f32.tflite"
-    num_inputs: 1
-    num_outputs: 4
     offset: 1
     tags: "float32"
   }
@@ -69,8 +59,6 @@ task {
     name: "SSD-MobileNets-v1 F16"
     src: "https://github.com/mlperf/mobile_app/raw/model_repo_v0.5/tflite/ssd_mobilenet_v1_300_f16.tflite"
     path: "/sdcard/mlperf_datasets/ssd_mobilenet_v1_300_f16.tflite"
-    num_inputs: 1
-    num_outputs: 4
     offset: 1
     tags: "float16"
   }
