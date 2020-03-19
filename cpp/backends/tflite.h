@@ -25,11 +25,13 @@ namespace mobile {
 // TfliteBackend runs ML inferences with TFLite.
 class TfliteBackend : public Backend {
  public:
-  TfliteBackend(const std::string& model_file_path, int num_threads,
-                const std::string& delegate);
+  TfliteBackend(const std::string& model_file_path, int num_threads);
 
   // A human-readable string for logging purposes.
   const std::string& Name() const override { return name_; }
+
+  // Apply the delegate, return error if failed.
+  TfLiteStatus ApplyDelegate(const std::string& delegate);
 
   // Run inference for a sample.
   void IssueQuery() override {

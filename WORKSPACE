@@ -5,10 +5,10 @@ load("@bazel_tools//tools/build_defs/repo:git.bzl", "new_git_repository")
 
 http_archive(
     name = "org_tensorflow",
-    sha256 = "0156716bcf21441c059f2c38f21fb25e01d71e645540fa0b229ed20783b3ba87",
-    strip_prefix = "tensorflow-3385b6108077876b7e51702249226ce7cb581401",
+    sha256 = "f371d0f8ead982c15383b0026e817995c2ae1dba89d8ca58c6a28164c0189b79",
+    strip_prefix = "tensorflow-0b772099d8c27d4d760ab4441772dbbefb5974bb",
     urls = [
-        "https://github.com/tensorflow/tensorflow/archive/3385b6108077876b7e51702249226ce7cb581401.tar.gz",
+        "https://github.com/tensorflow/tensorflow/archive/0b772099d8c27d4d760ab4441772dbbefb5974bb.tar.gz",
     ],
 )
 
@@ -162,13 +162,16 @@ check_bazel_version_at_least("0.24.1")
 
 # Dependencies for android instrument test.
 ATS_TAG = "1edfdab3134a7f01b37afabd3eebfd2c5bb05151"
+
 ATS_SHA256 = "dcd1ff76aef1a26329d77863972780c8fe1fc8ff625747342239f0489c2837ec"
+
 http_archive(
     name = "android_test_support",
     sha256 = ATS_SHA256,
     strip_prefix = "android-test-%s" % ATS_TAG,
     urls = ["https://github.com/android/android-test/archive/%s.tar.gz" % ATS_TAG],
 )
+
 load("@android_test_support//:repo.bzl", "android_test_repositories")
 
 android_test_repositories()

@@ -3,7 +3,10 @@
   <string-array name="delegates" description="Delegate strings [CHAR_LIMIT=50]">
     <item>@string/delegate_none</item>
     <item>@string/delegate_gpu</item>
-    <item>@string/delegate_nnapi</item>
+    <item>@string/delegate_gpu_f16</item>
+  </string-array>
+  <string-array name="delegates_default" description="Delegate default value [CHAR_LIMIT=50]">
+    <item>@string/delegate_none</item>
   </string-array>
   <string-array name="loginfo" description="Log Info strings [CHAR_LIMIT=50]">
     <item>@string/log_none</item>

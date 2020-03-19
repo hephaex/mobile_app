@@ -27,6 +27,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import androidx.preference.DialogPreference;
 import androidx.preference.EditTextPreference;
+import androidx.preference.MultiSelectListPreference;
 import androidx.preference.Preference;
 import androidx.preference.PreferenceDialogFragmentCompat;
 import androidx.preference.PreferenceFragmentCompat;
@@ -34,6 +35,8 @@ import androidx.preference.PreferenceScreen;
 import com.google.android.material.chip.Chip;
 import com.google.android.material.chip.ChipGroup;
 import com.google.android.material.switchmaterial.SwitchMaterial;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 import org.mlperf.proto.MLPerfConfig;
@@ -77,6 +80,26 @@ public class SettingsActivity extends AppCompatActivity {
               editText.setInputType(InputType.TYPE_CLASS_NUMBER);
             }
           });
+
+      // Add NNAPI options to delegate setttings.
+      MultiSelectListPreference delegatePreference =
+          getPreferenceManager().findPreference(getString(R.string.pref_delegate_key));
+      ArrayList<String> devices = MLPerfDriverWrapper.listDevicesForNNAPI();
+      ArrayList<CharSequence> entries =
+          new ArrayList<>(Arrays.asList(delegatePreference.getEntries()));
+      ArrayList<CharSequence> entryValues =
+          new ArrayList<>(Arrays.asList(delegatePreference.getEntryValues()));
+      if (devices.isEmpty()) {
+        entries.add(getString(R.string.delegate_nnapi));
+        entryValues.add(getString(R.string.delegate_nnapi));
+      } else {
+        for (String device : devices) {
+          entries.add("NNAPI (" + device + ")");
+          entryValues.add("NNAPI-" + device);
+        }
+      }
+      delegatePreference.setEntries(entries.toArray(new CharSequence[entries.size()]));
+      delegatePreference.setEntryValues(entryValues.toArray(new CharSequence[entryValues.size()]));
 
       // Add a new ModelsPreference.
       PreferenceScreen screen = getPreferenceScreen();

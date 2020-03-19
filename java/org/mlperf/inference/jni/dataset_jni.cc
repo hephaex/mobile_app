@@ -73,13 +73,17 @@ JNIEXPORT jlong JNICALL Java_org_mlperf_inference_MLPerfDriverWrapper_coco(
 }
 
 JNIEXPORT jlong JNICALL
-Java_org_mlperf_inference_MLPerfDriverWrapper_dummyDataset(
-    JNIEnv* env, jclass clazz, jlong backend_handle) {
+Java_org_mlperf_inference_MLPerfDriverWrapper_dummyDataset(JNIEnv* env,
+                                                           jclass clazz,
+                                                           jlong backend_handle,
+                                                           jint dataset_type) {
   Backend* backend = convertLongToBackend(env, backend_handle);
   // Create a new DummyDataset object.
   std::unique_ptr<mlperf::mobile::DummyDataset> dummy_dataset_ptr(
-      new mlperf::mobile::DummyDataset(backend->GetInputFormat(),
-                                       backend->GetOutputFormat()));
+      new mlperf::mobile::DummyDataset(
+          backend->GetInputFormat(), backend->GetOutputFormat(),
+          static_cast<mlperf::mobile::DatasetConfig::DatasetType>(
+              dataset_type)));
   return reinterpret_cast<jlong>(dummy_dataset_ptr.release());
 }
 

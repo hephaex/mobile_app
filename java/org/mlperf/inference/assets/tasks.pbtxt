@@ -5,21 +5,18 @@ task {
     type: IMAGENET
     path: "/sdcard/mlperf_datasets/imagenet/img/"
     groundtruth_src: "@assets/imagenet_val.txt"
-    groundtruth_path: "/sdcard/mlperf_datasets/imagenet/imagenet_val.txt"
   }
   model {
-    name: "MobileNets-v1 224 Uint8"
-    src: "https://github.com/mlperf/mobile_app/raw/model_repo_v0.5/tflite/mobilenet_v1_1.0_224_quant.tflite"
-    path: "/sdcard/mlperf_datasets/imagenet/mobilenet_v1_1.0_224_quant.tflite"
+    name: "MobileNetEdgeTPU 224 1.0 Int8"
+    src: "https://github.com/mlperf/mobile_app/raw/model_repo_v0.7/tflite/mobilenet_edgetpu_224_1.0_int8.tflite"
     offset: 1
-    tags: "uint8"
+    tags: "int8"
   }
   model {
-    name: "MobileNets-v1 224 Float"
-    src: "https://github.com/mlperf/mobile_app/raw/model_repo_v0.5/tflite/mobilenet_v1_1.0_224.tflite"
-    path: "/sdcard/mlperf_datasets/imagenet/mobilenet_v1_1.0_224.tflite"
+    name: "MobileNetEdgeTPU 224 1.0 F32"
+    src: "https://github.com/mlperf/mobile_app/raw/model_repo_v0.7/tflite/mobilenet_edgetpu_224_1.0_float.tflite"
     offset: 1
-    tags: "float"
+    tags: "float32"
   }
   min_query_count: 100
   min_duration_ms: 1000
@@ -32,21 +29,51 @@ task {
     type: COCO
     path: "/sdcard/mlperf_datasets/coco/img/"
     groundtruth_src: "@assets/coco_val.pbtxt"
-    groundtruth_path: "/sdcard/mlperf_datasets/coco/coco_val.pbtxt"
   }
   model {
-    name: "SSD-MobileNets-v1 Uint8"
-    src: "https://github.com/mlperf/mobile_app/raw/model_repo_v0.5/tflite/coco_ssd_mobilenet_v1_1.0_quant.tflite"
-    path: "/sdcard/mlperf_datasets/coco/coco_ssd_mobilenet_v1_1.0_quant.tflite"
+    name: "SSD-MobileNets-v2 Int8"
+    src: "https://github.com/mlperf/mobile_app/raw/model_repo_v0.7/tflite/ssd_mobilenet_v2_300_int8.tflite"
     offset: 1
-    tags: "uint8"
+    tags: "int8"
   }
   model {
-    name: "SSD-MobileNets-v1 Float"
-    src: "https://github.com/mlperf/mobile_app/raw/model_repo_v0.5/tflite/coco_ssd_mobilenet_v1_1.0.tflite"
-    path: "/sdcard/mlperf_datasets/coco/coco_ssd_mobilenet_v1_1.0.tflite"
+    name: "SSD-MobileNets-v2 F32"
+    src: "https://github.com/mlperf/mobile_app/raw/model_repo_v0.7/tflite/ssd_mobilenet_v2_300_float.tflite"
     offset: 1
-    tags: "float"
+    tags: "float32"
+  }
+  min_query_count: 100
+  min_duration_ms: 1000
+}
+
+task {
+  name: " Language Understanding"
+  dataset {
+    name: "Dummy"
+    type: MOBILEBERT
+    path: "/sdcard/mlperf_datasets/mobilebert/"
+  }
+  model {
+    name: "MobileBert F32"
+    src: "https://github.com/mlperf/mobile_app/raw/model_repo_v0.7/tflite/mobilebert_float_20191023.tflite"
+    tags: "float32"
+  }
+  min_query_count: 100
+  min_duration_ms: 1000
+}
+
+task {
+  name: "Image Segmentation"
+  dataset {
+    name: "ADE20k"
+    type: ADE20K
+    path: "/sdcard/mlperf_datasets/ade20k/"
+  }
+
+  model {
+    name: "Deeplab-v3 Mobilenet-v2 F32"
+    src: "https://github.com/mlperf/mobile_app/raw/model_repo_v0.7/tflite/deeplabv3_mnv2_ade20k_float.tflite"
+    tags: "float32"
   }
   min_query_count: 100
   min_duration_ms: 1000

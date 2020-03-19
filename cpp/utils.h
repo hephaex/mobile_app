@@ -33,6 +33,8 @@ struct DataType {
     Uint8 = 1,
     Int8 = 2,
     Float16 = 3,
+    Int32 = 4,
+    Int64 = 5,
   };
 
   DataType(Type t, int s) {
@@ -44,16 +46,15 @@ struct DataType {
     switch (type) {
       case Uint8:
         return 1;
-        break;
       case Int8:
         return 1;
-        break;
       case Float16:
         return 2;
-        break;
+      case Int32:
       case Float32:
         return 4;
-        break;
+      case Int64:
+        return 8;
     }
   }
 

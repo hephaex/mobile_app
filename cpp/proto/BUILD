@@ -13,8 +13,6 @@
 # limitations under the License.
 # ==============================================================================
 
-load("@com_google_protobuf//:protobuf.bzl", "cc_proto_library")
-
 package(
     default_visibility = ["//visibility:public"],
     licenses = ["notice"],  # Apache 2.0
@@ -32,7 +30,12 @@ proto_library(
     visibility = ["//visibility:public"],
 )
 
+cc_proto_library(
+    name = "mlperf_task_cc_proto",
+    deps = [":mlperf_task_proto"],
+)
+
 java_proto_library(
     name = "mlperf_task_java_proto",
-    deps = ["mlperf_task_proto"],
+    deps = [":mlperf_task_proto"],
 )

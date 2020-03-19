@@ -96,6 +96,7 @@ android_library(
     manifest = "AndroidManifest.xml",
     deps = [
         ":evaluation_native",
+        ":mlperf_task_java_proto_lite",
     ],
 )
 

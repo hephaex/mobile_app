@@ -38,9 +38,9 @@ cc_library(
         "//cpp/datasets:coco",
         "//cpp/datasets:dummy_dataset",
         "//cpp/datasets:imagenet",
-        "@org_tensorflow//tensorflow/lite/java/jni",
         "@org_tensorflow//tensorflow/lite/java/src/main/native",
         "@org_tensorflow//tensorflow/lite/java/src/main/native:native_framework_only",
+        "@org_tensorflow//tensorflow/lite/nnapi:nnapi_implementation",
     ],
     alwayslink = 1,
 )

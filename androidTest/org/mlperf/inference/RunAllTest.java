@@ -17,7 +17,6 @@ package org.mlperf.inference;
 
 import static androidx.test.espresso.Espresso.onView;
 import static androidx.test.espresso.action.ViewActions.click;
-import static androidx.test.espresso.assertion.ViewAssertions.matches;
 import static androidx.test.espresso.matcher.ViewMatchers.withId;
 
 import android.content.SharedPreferences;
@@ -40,9 +39,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-/**
- * Test for running all models.
- */
+/** Test for running all models. */
 @RunWith(AndroidJUnit4.class)
 @LargeTest
 public class RunAllTest {
@@ -54,18 +51,18 @@ public class RunAllTest {
    * after test completes. This is a replacement for {@link androidx.test.rule.ActivityTestRule}.
    */
   @Rule
-  public ActivityScenarioRule<MLPerfEvaluation> activityScenarioRule
-      = new ActivityScenarioRule<>(MLPerfEvaluation.class);
+  public ActivityScenarioRule<MLPerfEvaluation> activityScenarioRule =
+      new ActivityScenarioRule<>(MLPerfEvaluation.class);
 
   @Rule
-  public GrantPermissionRule permissionRule = GrantPermissionRule
-      .grant(android.Manifest.permission.WRITE_EXTERNAL_STORAGE);
+  public GrantPermissionRule permissionRule =
+      GrantPermissionRule.grant(android.Manifest.permission.WRITE_EXTERNAL_STORAGE);
 
   @Test
   public void testRunAll() {
     // Get number of selected models from preference.
-    sharedPref = PreferenceManager
-        .getDefaultSharedPreferences(InstrumentationRegistry.getTargetContext());
+    sharedPref =
+        PreferenceManager.getDefaultSharedPreferences(InstrumentationRegistry.getTargetContext());
     int num_models = sharedPref.getStringSet("selected_models", null).size();
 
     // Click the play button then wait for all tasks finished.
@@ -115,7 +112,8 @@ public class RunAllTest {
       // Timeout.
       throw new PerformException.Builder()
           .withActionDescription(getDescription())
-          .withViewDescription(viewMatcher.toString()).build();
+          .withViewDescription(viewMatcher.toString())
+          .build();
     }
 
     public static ViewAction waitFor(Matcher<View> viewMatcher, long timeout) {

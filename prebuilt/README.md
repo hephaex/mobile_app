@@ -20,7 +20,7 @@ we can bundle the necessary datasets directly in the app.
 Install the app via `adb` as follows:
 
 ```
-adb install ${ROOT_DIR}/prebuilt/MLPerf_0.5_alpha01.apk
+adb install ${ROOT_DIR}/prebuilt/MLPerf_0.5_alpha02.apk
 ```
 
 The prebuilt APK contains libraries for 32 and 64-bit ARM devices, as well as
@@ -81,9 +81,7 @@ The app evaluates Object Detection using any subset of images used in
 To prepare the dataset for object detection you need to do the following:
 
 *   Download the 2017 Val images from above website.
-*   Create a staging directory for the dataset, call it `${WORKING_DIR}/coco`.
-*   Resize the images using the [upscale_coco.py script](https://github.com/mlperf/inference/blob/master/v0.5/tools/upscale_coco):<br>
-    `python upscale_coco.py --inputs /path-to-coco/ --outputs ${WORKING_DIR}/coco/img/ --size 300 300`
+*   Extract the images to `${WORKING_DIR}/coco/img` directory.
 
 The resulting folder contents should appear like:
 

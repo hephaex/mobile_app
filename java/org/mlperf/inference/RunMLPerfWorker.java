@@ -41,6 +41,7 @@ public final class RunMLPerfWorker implements Handler.Callback {
   public static final int REPLY_UPDATE = 1;
   public static final int REPLY_COMPLETE = 2;
   public static final int REPLY_CANCEL = 3;
+  public static final int REPLY_ERROR = 4;
   public static final String TAG = "RunMLPerfWorker";
 
   private final MLPerfConfig mlperfTasks;
@@ -61,29 +62,33 @@ public final class RunMLPerfWorker implements Handler.Callback {
     Messenger messenger = msg.replyTo;
     Log.d(TAG, "handleMessage() " + data);
     if (data.taskIdx < 0 || data.modelIdx < 0 || data.numThreads < 0) {
-      replyWithUpdateMessage(messenger, "Received malformed data.");
+      replyWithUpdateMessage(messenger, "Received malformed data.", REPLY_UPDATE);
       return false;
     }
     // Runs the model.
+    String mode = "SubmissionRun";
     TaskConfig taskConfig = mlperfTasks.getTask(data.taskIdx);
     ModelConfig modelConfig = taskConfig.getModel(data.modelIdx);
     DatasetConfig dataset = taskConfig.getDataset();
     boolean useDummyDataSet = !new File(dataset.getPath()).isDirectory();
     String modelName = modelConfig.getName();
     String runtime = computeRuntimeString(data.numThreads, data.delegate);
-    replyWithUpdateMessage(messenger, "Running inference for \"" + modelName + "\"...");
-    replyWithUpdateMessage(messenger, " - runtime: " + runtime);
+    replyWithUpdateMessage(
+        messenger, "Running inference for \"" + modelName + "\"...", REPLY_UPDATE);
+    replyWithUpdateMessage(messenger, " - runtime: " + runtime, REPLY_UPDATE);
     try {
       MLPerfDriverWrapper.Builder builder = new MLPerfDriverWrapper.Builder();
-      builder.useTfliteBackend(modelConfig.getPath(), data.numThreads, data.delegate);
+      builder.useTfliteBackend(
+          MLPerfTasks.getLocalPath(modelConfig.getSrc()), data.numThreads, data.delegate);
       if (useDummyDataSet) {
-        builder.useDummy();
+        builder.useDummy(dataset.getType());
+        mode = "PerformanceOnly";
       } else {
         switch (dataset.getType()) {
           case IMAGENET:
             builder.useImagenet(
                 dataset.getPath(),
-                dataset.getGroundtruthPath(),
+                MLPerfTasks.getLocalPath(dataset.getGroundtruthSrc()),
                 modelConfig.getOffset(),
                 /*imageWidth=*/ 224,
                 /*imageHeight=*/ 224);
@@ -91,7 +96,7 @@ public final class RunMLPerfWorker implements Handler.Callback {
           case COCO:
             builder.useCoco(
                 dataset.getPath(),
-                dataset.getGroundtruthPath(),
+                MLPerfTasks.getLocalPath(dataset.getGroundtruthSrc()),
                 modelConfig.getOffset(),
                 /*numClasses=*/ 91,
                 /*imageWidth=*/ 300,
@@ -101,17 +106,15 @@ public final class RunMLPerfWorker implements Handler.Callback {
       }
       MLPerfDriverWrapper driverWrapper = builder.build();
       driverWrapper.runMLPerf(
-          "SubmissionRun",
-          taskConfig.getMinQueryCount(),
-          taskConfig.getMinDurationMs(),
-          data.outputFolder);
-      replyWithUpdateMessage(messenger, "Finished running \"" + modelName + "\".");
+          mode, taskConfig.getMinQueryCount(), taskConfig.getMinDurationMs(), data.outputFolder);
+      replyWithUpdateMessage(messenger, "Finished running \"" + modelName + "\".", REPLY_UPDATE);
       replyWithCompleteMessage(
           messenger, modelName, runtime, driverWrapper.getLatency(), driverWrapper.getAccuracy());
     } catch (Exception e) {
       replyWithUpdateMessage(
-          messenger, "Running inference for \"" + modelName + "\" failed with " + e.getMessage());
-      replyWithCompleteMessage(messenger, modelName, runtime, "Err", "Err");
+          messenger,
+          "Running inference for \"" + modelName + "\" failed with error: " + e.getMessage(),
+          REPLY_ERROR);
       return false;
     }
     return true;
@@ -145,9 +148,9 @@ public final class RunMLPerfWorker implements Handler.Callback {
     waitingMessages.clear();
   }
 
-  private static void replyWithUpdateMessage(Messenger messenger, String update) {
+  private static void replyWithUpdateMessage(Messenger messenger, String update, int type) {
     Message reply = Message.obtain();
-    reply.what = REPLY_UPDATE;
+    reply.what = type;
     reply.obj = update;
     try {
       messenger.send(reply);

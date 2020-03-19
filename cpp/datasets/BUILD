@@ -32,6 +32,7 @@ cc_library(
     deps = [
         "//cpp:mlperf_driver",
         "//cpp:utils",
+        "//cpp/proto:mlperf_task_cc_proto",
     ],
 )
 

@@ -38,6 +38,7 @@ cc_binary(
         "//cpp/datasets:coco",
         "//cpp/datasets:dummy_dataset",
         "//cpp/datasets:imagenet",
+        "//cpp/proto:mlperf_task_cc_proto",
         "@com_google_absl//absl/strings",
         "@org_tensorflow//tensorflow/lite/tools:command_line_flags",
     ],

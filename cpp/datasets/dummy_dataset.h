@@ -18,6 +18,7 @@ limitations under the License.
 #include <vector>
 
 #include "cpp/dataset.h"
+#include "cpp/proto/mlperf_task.pb.h"
 #include "cpp/utils.h"
 
 namespace mlperf {
@@ -28,8 +29,20 @@ namespace mobile {
 // measurment without accuracy calculation.
 class DummyDataset : public Dataset {
  public:
-  DummyDataset(const DataFormat& input_format, const DataFormat& output_format)
-      : Dataset(input_format, output_format) {
+  DummyDataset(const DataFormat& input_format, const DataFormat& output_format,
+               DatasetConfig::DatasetType dataset_type)
+      : Dataset(input_format, output_format), dataset_type_(dataset_type) {
+    // MobileBert expects to take 3 inputs in following order: input_ids,
+    // input_mask and segment_ids.
+    if (dataset_type_ == DatasetConfig::MOBILEBERT &&
+        (input_format_.size() != 3 ||
+         input_format_[0].type != DataType::Int32 ||
+         input_format_[1].type != DataType::Int32 ||
+         input_format_[2].type != DataType::Int32)) {
+      LOG(FATAL) << "MobileBert expects 3 input in order: input_ids, "
+                    "input_mask, segment_ids";
+      return;
+    }
     // The number of samples only affects the randomness. Fix it to 1024.
     samples_ = std::vector<std::vector<std::vector<uint8_t>*>>(1024);
   }
@@ -64,6 +77,7 @@ class DummyDataset : public Dataset {
 
  private:
   const std::string name_ = "DummyDataset";
+  const DatasetConfig::DatasetType dataset_type_;
   // Loaded samples in RAM.
   std::vector<std::vector<std::vector<uint8_t>*>> samples_;
 };

@@ -21,13 +21,19 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
+import android.graphics.Color;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Message;
 import android.os.Messenger;
+import android.text.SpannableString;
+import android.text.Spanned;
 import android.text.method.ScrollingMovementMethod;
+import android.text.style.ForegroundColorSpan;
 import android.util.Log;
 import android.view.View;
 import android.view.Window;
@@ -44,6 +50,7 @@ import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -73,7 +80,7 @@ public class MLPerfEvaluation extends AppCompatActivity implements Handler.Callb
   private final ArrayList<ResultHolder> results = new ArrayList<>();
   private final HashMap<String, Integer> resultMap = new HashMap<>();
 
-  private String interpreterDelegate;
+  private Set<String> delegates;
   private int numThreadsPreference;
   private int highLightColor;
   private int backgroundColor;
@@ -145,9 +152,7 @@ public class MLPerfEvaluation extends AppCompatActivity implements Handler.Callb
   public void onResume() {
     super.onResume();
     // Updates the shared preference.
-    interpreterDelegate =
-        sharedPref.getString(
-            getString(R.string.pref_delegate_key), getString(R.string.delegate_nnapi));
+    delegates = sharedPref.getStringSet(getString(R.string.pref_delegate_key), null);
     numThreadsPreference =
         Integer.parseInt(
             sharedPref.getString(
@@ -184,6 +189,19 @@ public class MLPerfEvaluation extends AppCompatActivity implements Handler.Callb
         addNewResult(result);
         progressCount.increaseProgress();
         break;
+      case RunMLPerfWorker.REPLY_ERROR:
+        String error = (String) inputMessage.obj;
+        // Set the color of error messages to red.
+        SpannableString sb = new SpannableString(error);
+        sb.setSpan(
+            new ForegroundColorSpan(Color.RED),
+            0,
+            error.length(),
+            Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        taskResultText.append(System.getProperty("line.separator"));
+        taskResultText.append(sb);
+        progressCount.increaseProgress();
+        break;
       case RunMLPerfWorker.REPLY_CANCEL:
         String message = (String) inputMessage.obj;
         logProgress(message);
@@ -218,7 +236,9 @@ public class MLPerfEvaluation extends AppCompatActivity implements Handler.Callb
         TaskConfig task = mlperfTasks.getTask(taskIdx);
         for (int modelIdx = 0; modelIdx < task.getModelCount(); ++modelIdx) {
           if (selectedModels.contains(task.getModel(modelIdx).getName())) {
-            scheduleInference(taskIdx, modelIdx);
+            for (String delegate : delegates) {
+              scheduleInference(taskIdx, modelIdx, delegate);
+            }
           }
         }
       }
@@ -287,7 +307,7 @@ public class MLPerfEvaluation extends AppCompatActivity implements Handler.Callb
   }
 
   // Schedule a inference task with WorkManager for the given model.
-  private void scheduleInference(int taskIdx, int modelIdx) {
+  private void scheduleInference(int taskIdx, int modelIdx, String delegate) {
     Log.d(TAG, "scheduleInference " + taskIdx + " , " + modelIdx);
     TaskConfig task = mlperfTasks.getTask(taskIdx);
     final String modelName = task.getModel(modelIdx).getName();
@@ -295,12 +315,12 @@ public class MLPerfEvaluation extends AppCompatActivity implements Handler.Callb
     Log.i(TAG, "The mlperf log dir for \"" + modelName + "\" is " + outputLogDir + "/");
     RunMLPerfWorker.WorkerData data =
         new RunMLPerfWorker.WorkerData(
-            taskIdx, modelIdx, numThreadsPreference, interpreterDelegate, outputLogDir);
+            taskIdx, modelIdx, numThreadsPreference, delegate, outputLogDir);
     Message msg = workerHandler.obtainMessage(RunMLPerfWorker.MSG_RUN, data);
     msg.replyTo = replyMessenger;
     workerHandler.sendMessage(msg);
     progressCount.increaseTotal();
-    logProgress("Worker for \"" + modelName + "\" scheduled.");
+    logProgress("Worker for \"" + modelName + "\" with delegate: " + delegate + " scheduled.");
   }
 
   private static class ProgressCount {
@@ -420,13 +440,14 @@ public class MLPerfEvaluation extends AppCompatActivity implements Handler.Callb
     if (!modelIsAvailable) {
       for (TaskConfig task : mlperfTasks.getTaskList()) {
         for (ModelConfig model : task.getModelList()) {
-          if (!new File(model.getPath()).canRead()) {
+          if (!new File(MLPerfTasks.getLocalPath(model.getSrc())).canRead()) {
             new ModelExtractTask(MLPerfEvaluation.this, mlperfTasks).execute();
             return false;
           }
         }
         DatasetConfig dataset = task.getDataset();
-        if (!new File(dataset.getGroundtruthPath()).canRead()) {
+        if (dataset.hasGroundtruthSrc()
+            && !new File(MLPerfTasks.getLocalPath(dataset.getGroundtruthSrc())).canRead()) {
           new ModelExtractTask(MLPerfEvaluation.this, mlperfTasks).execute();
           return false;
         }
@@ -445,10 +466,10 @@ public class MLPerfEvaluation extends AppCompatActivity implements Handler.Callb
   // ModelExtractTask copies or downloads files to their location (external storage) when
   // they're not available.
   private static class ModelExtractTask extends AsyncTask<Void, Void, Void> {
-
     private final WeakReference<Context> contextRef;
     private final MLPerfConfig mlperfTasks;
     private boolean success = true;
+    private String error;
 
     public ModelExtractTask(Context context, MLPerfConfig mlperfTasks) {
       contextRef = new WeakReference<>(context);
@@ -459,15 +480,15 @@ public class MLPerfEvaluation extends AppCompatActivity implements Handler.Callb
     protected Void doInBackground(Void... voids) {
       for (TaskConfig task : mlperfTasks.getTaskList()) {
         for (ModelConfig model : task.getModelList()) {
-          if (!new File(model.getPath()).canRead()) {
-            if (!extractFile(model.getSrc(), model.getPath())) {
+          if (!new File(MLPerfTasks.getLocalPath(model.getSrc())).canRead()) {
+            if (!extractFile(model.getSrc())) {
               success = false;
             }
           }
         }
         DatasetConfig dataset = task.getDataset();
-        if (!new File(dataset.getGroundtruthPath()).canRead()) {
-          if (!extractFile(dataset.getGroundtruthSrc(), dataset.getGroundtruthPath())) {
+        if (!new File(MLPerfTasks.getLocalPath(dataset.getGroundtruthSrc())).canRead()) {
+          if (!extractFile(dataset.getGroundtruthSrc())) {
             success = false;
           }
         }
@@ -475,28 +496,37 @@ public class MLPerfEvaluation extends AppCompatActivity implements Handler.Callb
       return null;
     }
 
-    private boolean extractFile(String src, String path) {
-      File destFile = new File(path);
+    private boolean extractFile(String src) {
+      String dest = MLPerfTasks.getLocalPath(src);
+      File destFile = new File(dest);
       Log.d(TAG, "Preparing " + destFile.getName());
       destFile.getParentFile().mkdirs();
       // Extract to a temporary file first, so the app can detects if the extraction failed.
-      File tmpFile = new File(path + ".tmp");
+      File tmpFile = new File(dest + ".tmp");
       try {
         InputStream in;
         if (src.startsWith(ASSETS_PREFIX)) {
           AssetManager assetManager = ((MLPerfEvaluation) contextRef.get()).getAssets();
           in = assetManager.open(src.substring(ASSETS_PREFIX.length()));
         } else if (src.startsWith("http://") || src.startsWith("https://")) {
+          ConnectivityManager cm =
+              (ConnectivityManager) contextRef.get().getSystemService(Context.CONNECTIVITY_SERVICE);
+          NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
+          boolean isConnected = activeNetwork != null && activeNetwork.isConnectedOrConnecting();
+          if (!isConnected) {
+            error = "Error: No network connected.";
+            return false;
+          }
           in = new URL(src).openStream();
         } else {
-          Log.e(TAG, "Malformed path: " + src);
-          return false;
+          in = new FileInputStream(src);
         }
         OutputStream out = new FileOutputStream(tmpFile, /*append=*/ false);
         copyFile(in, out);
         tmpFile.renameTo(destFile);
       } catch (IOException e) {
-        Log.e(TAG, "Failed to prepare file: " + path, e);
+        Log.e(TAG, "Failed to prepare file " + dest + ": " + e.getMessage());
+        error = "Error: " + e.getMessage();
         return false;
       }
 
@@ -523,6 +553,8 @@ public class MLPerfEvaluation extends AppCompatActivity implements Handler.Callb
         Log.d(TAG, "All missing files are extracted.");
         ((MLPerfEvaluation) contextRef.get()).logProgress("All missing files are extracted.");
         ((MLPerfEvaluation) contextRef.get()).setModelIsAvailable();
+      } else {
+        ((MLPerfEvaluation) contextRef.get()).logProgress(error);
       }
     }
   }

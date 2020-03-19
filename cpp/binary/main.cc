@@ -24,6 +24,7 @@ limitations under the License.
 #include "cpp/datasets/dummy_dataset.h"
 #include "cpp/datasets/imagenet.h"
 #include "cpp/mlperf_driver.h"
+#include "cpp/proto/mlperf_task.pb.h"
 #include "cpp/utils.h"
 #include "tensorflow/lite/tools/command_line_flags.h"
 
@@ -36,14 +37,6 @@ enum class BackendType {
   TFLITE = 1,
 };
 
-// Supported datasets.
-enum class DatasetType {
-  NONE = 0,
-  DUMMY = 1,
-  IMAGENET = 2,
-  COCO = 3,
-};
-
 BackendType Str2BackendType(absl::string_view name) {
   if (absl::EqualsIgnoreCase(name, "TFLITE")) {
     return BackendType::TFLITE;
@@ -52,15 +45,15 @@ BackendType Str2BackendType(absl::string_view name) {
   }
 }
 
-DatasetType Str2DatasetType(absl::string_view name) {
+DatasetConfig::DatasetType Str2DatasetType(absl::string_view name) {
   if (absl::EqualsIgnoreCase(name, "COCO")) {
-    return DatasetType::COCO;
+    return DatasetConfig::COCO;
   } else if (absl::EqualsIgnoreCase(name, "IMAGENET")) {
-    return DatasetType::IMAGENET;
-  } else if (absl::EqualsIgnoreCase(name, "DUMMY")) {
-    return DatasetType::DUMMY;
+    return DatasetConfig::IMAGENET;
+  } else if (absl::EqualsIgnoreCase(name, "MOBILEBERT")) {
+    return DatasetConfig::MOBILEBERT;
   } else {
-    return DatasetType::NONE;
+    return DatasetConfig::NONE;
   }
 }
 
@@ -73,7 +66,7 @@ int Main(int argc, char* argv[]) {
   // Flags for backend and dataset.
   std::string backend_name, dataset_name;
   BackendType backend_type = BackendType::NONE;
-  DatasetType dataset_type = DatasetType::NONE;
+  DatasetConfig::DatasetType dataset_type = DatasetConfig::NONE;
   std::vector<Flag> flag_list{
       Flag::CreateFlag("backend", &backend_name,
                        "Backend. Only TFLite is supported at the moment.",
@@ -84,7 +77,8 @@ int Main(int argc, char* argv[]) {
   Flags::Parse(&argc, const_cast<const char**>(argv), flag_list);
   backend_type = Str2BackendType(backend_name);
   dataset_type = Str2DatasetType(dataset_name);
-  if (backend_type == BackendType::NONE || dataset_type == DatasetType::NONE) {
+  if (backend_type == BackendType::NONE ||
+      dataset_type == DatasetConfig::NONE) {
     LOG(FATAL) << Flags::Usage(command_line, flag_list);
     return 1;
   }
@@ -127,10 +121,17 @@ int Main(int argc, char* argv[]) {
                             "Number of interpreter threads for inference."),
            Flag::CreateFlag("delegate", &delegate,
                             "Delegate for inference, if available. "
-                            "Can be one value of {'nnapi', 'gpu', 'none'}.")});
+                            "Can be one value of {'nnapi', 'nnapi-{accelerator "
+                            "name}', 'gpu', 'gpu (f16)', 'none'}.")});
       if (Flags::Parse(&argc, const_cast<const char**>(argv), flag_list)) {
-        backend.reset(
-            new TfliteBackend(model_file_path, num_threads, delegate));
+        TfliteBackend* tflite_backend =
+            new TfliteBackend(model_file_path, num_threads);
+        if (tflite_backend->ApplyDelegate(delegate) != kTfLiteOk) {
+          LOG(INFO) << "Cannot apply the delegate.";
+          delete tflite_backend;
+          return 1;
+        }
+        backend.reset(tflite_backend);
       }
     } break;
     default:
@@ -140,7 +141,7 @@ int Main(int argc, char* argv[]) {
   // Command Line Flags for dataset.
   std::unique_ptr<Dataset> dataset;
   switch (dataset_type) {
-    case DatasetType::IMAGENET: {
+    case DatasetConfig::IMAGENET: {
       LOG(INFO) << "Using Imagenet dataset";
       std::string images_directory, groundtruth_file;
       int offset = 1, image_width = 224, image_height = 224;
@@ -169,14 +170,15 @@ int Main(int argc, char* argv[]) {
       flag_list.insert(flag_list.end(), dataset_flags.begin(),
                        dataset_flags.end());
     } break;
-    case DatasetType::DUMMY: {
+    case DatasetConfig::NONE: {
       LOG(INFO) << "Using Dummy dataset";
       if (backend) {
         dataset.reset(new DummyDataset(backend->GetInputFormat(),
-                                       backend->GetOutputFormat()));
+                                       backend->GetOutputFormat(),
+                                       dataset_type));
       }
     } break;
-    case DatasetType::COCO: {
+    case DatasetConfig::COCO: {
       LOG(INFO) << "Using Coco dataset";
       std::string images_directory, groundtruth_file;
       int offset = 1, num_classes = 91, image_width = 300, image_height = 300;
@@ -218,7 +220,7 @@ int Main(int argc, char* argv[]) {
     return 1;
   }
   // If using the dummy dataset, only run the performance mode.
-  if (dataset_type == DatasetType::DUMMY) {
+  if (dataset_type == DatasetConfig::NONE) {
     mode = "PerformanceOnly";
   }
 

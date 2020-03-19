@@ -3,12 +3,12 @@
   <androidx.preference.PreferenceCategory
       android:title="TensorFlow Lite"
       app:iconSpaceReserved="false">
-    <androidx.preference.ListPreference
-        android:defaultValue="@string/delegate_nnapi"
+    <androidx.preference.MultiSelectListPreference
+        android:defaultValue="@array/delegates_default"
         android:entries="@array/delegates"
         android:entryValues="@array/delegates"
         android:key="@string/pref_delegate_key"
-        android:summary="%s"
+        android:summary="@string/pref_delegate_sum"
         android:title="@string/pref_delegate_setting"
         app:allowDividerBelow="true"
         app:iconSpaceReserved="false" />

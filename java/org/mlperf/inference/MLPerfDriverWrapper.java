@@ -15,6 +15,9 @@ limitations under the License.
 
 package org.mlperf.inference;
 
+import java.util.ArrayList;
+import org.mlperf.proto.DatasetConfig;
+
 /** A class that wraps functionality around tflite::mlperf::MlperfDriver. */
 public final class MLPerfDriverWrapper implements AutoCloseable {
   /**
@@ -55,6 +58,10 @@ public final class MLPerfDriverWrapper implements AutoCloseable {
     nativeDelete(driverHandle);
   }
 
+  // List devices available for NNAPI. This only works on API >= 29, otherwise it returns an
+  // empty list.
+  public static native ArrayList<String> listDevicesForNNAPI();
+
   // Native functions.
   private native long nativeInit(long datasetHandle, long backendHandle);
 
@@ -92,7 +99,7 @@ public final class MLPerfDriverWrapper implements AutoCloseable {
       int imageHeight);
 
   // Return a pointer of a new DummyDataset C++ object.
-  private static native long dummyDataset(long backendHandle);
+  private static native long dummyDataset(long backendHandle, int datasetType);
 
   // Native functions for backend manipulation. Nullness of the pointer is checked
   // inside nativeDeleteBackend. Callers can skip that check.
@@ -145,9 +152,9 @@ public final class MLPerfDriverWrapper implements AutoCloseable {
       return this;
     }
 
-    public Builder useDummy() {
+    public Builder useDummy(DatasetConfig.DatasetType type) {
       nativeDeleteDataset(dataset);
-      dataset = dummyDataset(getBackend());
+      dataset = dummyDataset(getBackend(), type.getNumber());
       return this;
     }
 

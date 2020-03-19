@@ -16,6 +16,7 @@ package org.mlperf.inference;
 
 import android.content.Context;
 import android.util.Log;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import org.mlperf.proto.MLPerfConfig;
@@ -24,6 +25,7 @@ import org.mlperf.proto.MLPerfConfig;
 final class MLPerfTasks {
   private static final String TAG = "MLPerfTasks";
   private static MLPerfConfig mlperfTasks;
+  private static String localDir;
 
   // Make this class not instantiable.
   private MLPerfTasks() {}
@@ -35,10 +37,16 @@ final class MLPerfTasks {
         InputStream inputStream = context.getResources().openRawResource(R.raw.tasks_pb);
         mlperfTasks = MLPerfConfig.parseFrom(inputStream);
         inputStream.close();
+        localDir = context.getFilesDir().getPath();
       } catch (IOException e) {
         Log.e(TAG, "Unable to read config proto file");
       }
     }
     return mlperfTasks;
+  }
+
+  public static String getLocalPath(String path) {
+    String filename = new File(path).getName();
+    return localDir + "/cache/" + filename;
   }
 }

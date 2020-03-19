@@ -14,7 +14,7 @@ limitations under the License.
 ==============================================================================*/
 syntax = "proto2";
 
-package org.mlperf.proto;
+package mlperf.mobile;
 
 option cc_enable_arenas = true;
 option java_multiple_files = true;
@@ -53,18 +53,21 @@ message DatasetConfig {
   required string name = 1;
   // Type of the dataset.
   enum DatasetType {
-    IMAGENET = 0;
-    COCO = 1;
+    NONE = 0;
+    IMAGENET = 1;
+    COCO = 2;
+    MOBILEBERT = 3;
+    ADE20K = 4;
   }
   required DatasetType type = 2;
   // Path to the dataset.
   required string path = 3;
-  // Path to the ground truth file of the dataset.
-  // If not available, the file will be downloaded from groundtruth_src.
-  required string groundtruth_path = 4;
-  // Path to download the ground truth file if groundtruth_path not available.
-  // Could be: http, https, or @assets/file (for files embedded in assets).
-  optional string groundtruth_src = 5;
+  // Path to download the ground truth file.
+  // Could be: http, https, or @assets/file (for files embedded in assets) or
+  // absolute path if the file is stored on the device. This file will be cached
+  // in the app's local directory. If you replace the src file without renaming,
+  // it is recommended to uninstall the app to reflect the update.
+  optional string groundtruth_src = 4;
 }
 
 // Config of a model.
@@ -73,13 +76,14 @@ message DatasetConfig {
 message ModelConfig {
   // Name of the model.
   required string name = 1;
-  // Path to the model. If not available, will be downloaded from src.
-  required string path = 2;
-  // Path to download the model if path is not available.
-  // Could be: http, https, or @assets/file (for files embedded in assets).
-  optional string src = 3;
+  // Path to download the model.
+  // Could be: http, https, or @assets/file (for files embedded in assets) or
+  // absolute path if the file is stored on the device. This file will be cached
+  // in the app's local directory. If you replace the src file without renaming,
+  // it is recommended to uninstall the app to reflect the update.
+  optional string src = 2;
   // Offset value of the model if applicable.
-  optional int32 offset = 4 [default = 0];
+  optional int32 offset = 3 [default = 0];
   // Tags related to the models.
-  optional string tags = 5;
+  optional string tags = 4;
 }
