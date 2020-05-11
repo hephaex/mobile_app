@@ -1,7 +1,6 @@
 workspace(name = "mlperf_app")
 
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
-load("@bazel_tools//tools/build_defs/repo:git.bzl", "new_git_repository")
 
 http_archive(
     name = "org_tensorflow",
@@ -100,12 +99,24 @@ maven_install(
 )
 
 # Other dependencies.
-new_git_repository(
+http_archive(
     name = "org_mlperf_inference",
     build_file = "@//third_party:loadgen.BUILD",
-    commit = "876c6e2e390b188d69675a59a71360ab39007bde",
     patch_cmds = ["python loadgen/version_generator.py loadgen/version_generated.cc loadgen"],
-    remote = "https://github.com/mlperf/inference",
+    sha256 = "dd5455d037da75be7b48f290cd9aaa6c9a510ecf09fa2ca5e8d28e3af6e30a44",
+    strip_prefix = "inference-876c6e2e390b188d69675a59a71360ab39007bde",
+    urls = [
+        "https://github.com/mlperf/inference/archive/876c6e2e390b188d69675a59a71360ab39007bde.tar.gz",
+    ],
+)
+
+http_archive(
+    name = "backend_dummy_api",
+    sha256 = "e478562b240623e18ada3d5bdfd00c6d2f15faf929df0d63e4a85f1b00b0f235",
+    strip_prefix = "mobile_app-bf8a793d6f726bd72082455c1625e30cd6ab992c",
+    urls = [
+        "https://github.com/mlperf/mobile_app/archive/bf8a793d6f726bd72082455c1625e30cd6ab992c.zip",
+    ],
 )
 
 http_archive(

@@ -20,7 +20,7 @@ we can bundle the necessary datasets directly in the app.
 Install the app via `adb` as follows:
 
 ```
-adb install ${ROOT_DIR}/prebuilt/MLPerf_0.5_alpha02.apk
+adb install ${ROOT_DIR}/prebuilt/MLPerf_0.7_alpha02.apk
 ```
 
 The prebuilt APK contains libraries for 32 and 64-bit ARM devices, as well as

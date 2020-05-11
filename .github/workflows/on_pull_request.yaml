@@ -9,39 +9,40 @@ jobs:
     name: Build and unit tests
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v2
 
-    - name: Store Cloud storage key
-      env:
-        CLOUD_STORAGE_KEY: ${{ secrets.CLOUD_STORAGE_KEY }}
-      run: echo $CLOUD_STORAGE_KEY > ~/work/_temp/_github_workflow/storage_key.json
+    - name: Cache build results
+      id: cache-build
+      uses: actions/cache@v1
+      with:
+        path: ~/work/_temp/_github_workflow/cache
+        key: bazel-build-cache-linux
 
     - name: Build all
       uses: docker://thaink/android-bazel:latest
       with:
         args: >
-          build --remote_http_cache=https://storage.googleapis.com/mlperf_mobile_app_bazel_build_cache
-          --google_credentials=/github/workflow/storage_key.json
+          --output_user_root=/github/workflow/cache/bazel build
           -c opt --cxxopt="--std=c++17" //...
 
     - name: Run unit tests
       uses: docker://thaink/android-bazel:latest
       with:
         args: >
-          test --test_output=streamed
-          --remote_http_cache=https://storage.googleapis.com/mlperf_mobile_app_bazel_unit_tests_cache
-          --google_credentials=/github/workflow/storage_key.json
+          --output_user_root=/github/workflow/cache/bazel test --test_output=streamed
           -c opt --cxxopt="--std=c++17" //cpp/...
   test:
     name: Instrument tests
     runs-on: macOS-latest
     steps:
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v2
 
-    - name: Store Cloud storage key
-      env:
-        CLOUD_STORAGE_KEY: ${{ secrets.CLOUD_STORAGE_KEY }}
-      run: echo $CLOUD_STORAGE_KEY > /Users/runner/storage_key.json
+    - name: Cache build results
+      id: cache-build
+      uses: actions/cache@v1
+      with:
+        path: .github/workflows/cache
+        key: bazel-build-cache
 
     - name: Install bazel
       run: wget https://github.com/bazelbuild/bazel/releases/download/2.0.0/bazel-2.0.0-installer-darwin-x86_64.sh &&
@@ -60,7 +61,8 @@ jobs:
     name: Lint check
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v2
 
     - name: Check lint
       uses: docker://thaink/code_lint:latest
+

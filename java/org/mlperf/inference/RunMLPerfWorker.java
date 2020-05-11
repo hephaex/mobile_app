@@ -26,7 +26,6 @@ import java.io.File;
 import java.util.IdentityHashMap;
 import java.util.Map;
 import org.mlperf.proto.DatasetConfig;
-import org.mlperf.proto.MLPerfConfig;
 import org.mlperf.proto.ModelConfig;
 import org.mlperf.proto.TaskConfig;
 
@@ -44,14 +43,14 @@ public final class RunMLPerfWorker implements Handler.Callback {
   public static final int REPLY_ERROR = 4;
   public static final String TAG = "RunMLPerfWorker";
 
-  private final MLPerfConfig mlperfTasks;
   private final IdentityHashMap<Message, String> waitingMessages;
   private final Handler handler;
+  private final Context context;
 
   public RunMLPerfWorker(@NonNull Context context, @NonNull Looper looper) {
-    mlperfTasks = MLPerfTasks.getConfig(context);
     waitingMessages = new IdentityHashMap<>();
     handler = new Handler(looper, this);
+    this.context = context;
   }
 
   @Override
@@ -67,7 +66,7 @@ public final class RunMLPerfWorker implements Handler.Callback {
     }
     // Runs the model.
     String mode = "SubmissionRun";
-    TaskConfig taskConfig = mlperfTasks.getTask(data.taskIdx);
+    TaskConfig taskConfig = MLPerfTasks.getConfig(context).getTask(data.taskIdx);
     ModelConfig modelConfig = taskConfig.getModel(data.modelIdx);
     DatasetConfig dataset = taskConfig.getDataset();
     boolean useDummyDataSet = !new File(dataset.getPath()).isDirectory();
@@ -75,11 +74,20 @@ public final class RunMLPerfWorker implements Handler.Callback {
     String runtime = computeRuntimeString(data.numThreads, data.delegate);
     replyWithUpdateMessage(
         messenger, "Running inference for \"" + modelName + "\"...", REPLY_UPDATE);
+    replyWithUpdateMessage(messenger, " - backend: " + data.backend, REPLY_UPDATE);
     replyWithUpdateMessage(messenger, " - runtime: " + runtime, REPLY_UPDATE);
     try {
       MLPerfDriverWrapper.Builder builder = new MLPerfDriverWrapper.Builder();
-      builder.useTfliteBackend(
-          MLPerfTasks.getLocalPath(modelConfig.getSrc()), data.numThreads, data.delegate);
+      if (data.backend.equals("tflite")) {
+        builder.useTfliteBackend(
+            MLPerfTasks.getLocalPath(modelConfig.getSrc()), data.numThreads, data.delegate);
+      } else if (data.backend.equals("dummy_backend")) {
+        builder.useDummyBackend(MLPerfTasks.getLocalPath(modelConfig.getSrc()));
+      } else {
+        replyWithUpdateMessage(
+            messenger, "The provided backend type is not supported", REPLY_ERROR);
+        return false;
+      }
       if (useDummyDataSet) {
         builder.useDummy(dataset.getType());
         mode = "PerformanceOnly";
@@ -123,7 +131,8 @@ public final class RunMLPerfWorker implements Handler.Callback {
   // Same as Handler.sendMessage but keeping track of the message pool.
   public boolean sendMessage(Message msg) {
     WorkerData data = (WorkerData) msg.obj;
-    String modelName = mlperfTasks.getTask(data.taskIdx).getModel(data.modelIdx).getName();
+    String modelName =
+        MLPerfTasks.getConfig(context).getTask(data.taskIdx).getModel(data.modelIdx).getName();
     waitingMessages.put(msg, modelName);
     return handler.sendMessage(msg);
   }
@@ -193,9 +202,15 @@ public final class RunMLPerfWorker implements Handler.Callback {
   /** Defines data for this worker. */
   public static class WorkerData {
     public WorkerData(
-        int taskId, int modelIdx, int numThreads, String delegate, String outputFolder) {
+        int taskId,
+        int modelIdx,
+        String backend,
+        int numThreads,
+        String delegate,
+        String outputFolder) {
       this.taskIdx = taskId;
       this.modelIdx = modelIdx;
+      this.backend = backend;
       this.numThreads = numThreads;
       this.delegate = delegate;
       this.outputFolder = outputFolder;
@@ -204,6 +219,7 @@ public final class RunMLPerfWorker implements Handler.Callback {
     protected int taskIdx;
     protected int modelIdx;
     protected int numThreads;
+    protected String backend;
     protected String delegate;
     protected String outputFolder;
   }

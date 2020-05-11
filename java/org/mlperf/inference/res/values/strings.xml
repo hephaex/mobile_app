@@ -15,7 +15,7 @@
     Accelerators
   </string>
   <string name="pref_delegate_key" description="Delegates Pref Key [CHAR_LIMIT=50]">
-    delegate_preference
+    delegate_preference_v2
   </string>
   <string name="pref_delegate_sum" description="Delegates Pref Summary [CHAR_LIMIT=50]">
     Accelerators for TFLite
@@ -42,7 +42,28 @@
     Only run selected models
   </string>
   <string name="models_preference_key" description="Selecting Models Pref Key [CHAR_LIMIT=50]">
-    selected_models
+    selected_models_v2
+  </string>
+  <string name="custom_config_key" description="Selecting custom config Key [CHAR_LIMIT=50]">
+    custom_config
+  </string>
+  <string name="config_summary_key" description="Selecting custom config summary key [CHAR_LIMIT=50]">
+    config_summary
+  </string>
+  <string name="custom_config_summary" description="Selecting custom config summary [CHAR_LIMIT=50]">
+    Using the default configuration
+  </string>
+  <string name="backend_preference" description="Inference backend [CHAR_LIMIT=50]">
+    Inference backend
+  </string>
+  <string name="backend_preference_key" description="Inference backend key [CHAR_LIMIT=50]">
+    inference_backend
+  </string>
+  <string name="tflite_preference_key" description="Tflite setting group key [CHAR_LIMIT=50]">
+    tflite
+  </string>
+  <string name="dummy_backend_preference_key" description="Dummy backend setting group key [CHAR_LIMIT=50]">
+    dummy_backend
   </string>
 
   <!-- Values for delegate setting -->

@@ -117,7 +117,7 @@ TfLiteStatus TfliteBackend::ApplyDelegate(const std::string& delegate) {
     return kTfLiteError;
   }
   return kTfLiteOk;
-}  // namespace mobile
+}
 
 std::vector<void*> TfliteBackend::GetPredictedOutputs() {
   std::vector<void*> outputs;

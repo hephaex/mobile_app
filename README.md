@@ -59,12 +59,15 @@ export ANDROID_HOME=Path/to/SDK # Ex: $HOME/Android/Sdk
 export ANDROID_NDK_HOME=Path/to/NDK # Ex: $ANDROID_HOME/ndk/(your version)
 ```
 
-The app can be built with the following command:
+The app can be built and installed with the following commands:
 
 ```bash
 bazel build -c opt --cxxopt='--std=c++14' \
     --fat_apk_cpu=x86,arm64-v8a,armeabi-v7a \
     //java/org/mlperf/inference:mlperf_app
+
+# Install the app with the command:
+adb install -r bazel-bin/java/org/mlperf/inference/mlperf_app.apk
 ```
 
 On the other hand, you can use our prebuilt docker image to build the app:
@@ -78,6 +81,9 @@ docker run \
     -c opt --cxxopt='--std=c++14' \
     --fat_apk_cpu=x86,arm64-v8a,armeabi-v7a \
     //java/org/mlperf/inference:mlperf_app
+
+# Install the app with the command:
+adb install -r <path to your cache dir>/../`readlink bazel-bin`/java/org/mlperf/inference/mlperf_app.apk
 ```
 
 Please see [these instructions](prebuilt/README.md) for installing and using the

@@ -39,6 +39,7 @@ android_library(
     srcs = [
         "MLPerfEvaluation.java",
         "MLPerfTasks.java",
+        "ModelsPreference.java",
         "ResultHolder.java",
         "ResultsAdapter.java",
         "RunMLPerfWorker.java",

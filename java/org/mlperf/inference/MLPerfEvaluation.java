@@ -80,6 +80,7 @@ public class MLPerfEvaluation extends AppCompatActivity implements Handler.Callb
   private final ArrayList<ResultHolder> results = new ArrayList<>();
   private final HashMap<String, Integer> resultMap = new HashMap<>();
 
+  private String backend;
   private Set<String> delegates;
   private int numThreadsPreference;
   private int highLightColor;
@@ -123,6 +124,14 @@ public class MLPerfEvaluation extends AppCompatActivity implements Handler.Callb
     ImageView settingButton = findViewById(R.id.action_settings);
     settingButton.setOnClickListener(this::settingButtonListener);
 
+    // Handles the result from RunMLPerfWorker.
+    replyMessenger = new Messenger(new Handler(this.getMainLooper(), this));
+    progressCount = new ProgressCount(progressBar, getWindow());
+  }
+
+  @Override
+  public void onResume() {
+    super.onResume();
     // Reads tasks from proto file.
     mlperfTasks = MLPerfTasks.getConfig(getApplicationContext());
 
@@ -140,18 +149,11 @@ public class MLPerfEvaluation extends AppCompatActivity implements Handler.Callb
       preferencesEditor.commit();
     }
 
-    // Handles the result from RunMLPerfWorker.
-    replyMessenger = new Messenger(new Handler(this.getMainLooper(), this));
-
     // Checks if models are available.
     checkModelIsAvailable();
-    progressCount = new ProgressCount(progressBar, getWindow());
-  }
 
-  @Override
-  public void onResume() {
-    super.onResume();
     // Updates the shared preference.
+    backend = sharedPref.getString(getString(R.string.backend_preference_key), null);
     delegates = sharedPref.getStringSet(getString(R.string.pref_delegate_key), null);
     numThreadsPreference =
         Integer.parseInt(
@@ -236,8 +238,14 @@ public class MLPerfEvaluation extends AppCompatActivity implements Handler.Callb
         TaskConfig task = mlperfTasks.getTask(taskIdx);
         for (int modelIdx = 0; modelIdx < task.getModelCount(); ++modelIdx) {
           if (selectedModels.contains(task.getModel(modelIdx).getName())) {
-            for (String delegate : delegates) {
-              scheduleInference(taskIdx, modelIdx, delegate);
+            if (backend.equals("tflite")) {
+              for (String delegate : delegates) {
+                scheduleInference(taskIdx, modelIdx, delegate);
+              }
+            } else if (backend.equals("dummy_backend")) {
+              scheduleInference(taskIdx, modelIdx, "");
+            } else {
+              logProgress("Backend " + backend + "is not supported.");
             }
           }
         }
@@ -315,7 +323,7 @@ public class MLPerfEvaluation extends AppCompatActivity implements Handler.Callb
     Log.i(TAG, "The mlperf log dir for \"" + modelName + "\" is " + outputLogDir + "/");
     RunMLPerfWorker.WorkerData data =
         new RunMLPerfWorker.WorkerData(
-            taskIdx, modelIdx, numThreadsPreference, delegate, outputLogDir);
+            taskIdx, modelIdx, backend, numThreadsPreference, delegate, outputLogDir);
     Message msg = workerHandler.obtainMessage(RunMLPerfWorker.MSG_RUN, data);
     msg.replyTo = replyMessenger;
     workerHandler.sendMessage(msg);
@@ -465,7 +473,7 @@ public class MLPerfEvaluation extends AppCompatActivity implements Handler.Callb
 
   // ModelExtractTask copies or downloads files to their location (external storage) when
   // they're not available.
-  private static class ModelExtractTask extends AsyncTask<Void, Void, Void> {
+  private static class ModelExtractTask extends AsyncTask<Void, String, Void> {
     private final WeakReference<Context> contextRef;
     private final MLPerfConfig mlperfTasks;
     private boolean success = true;
@@ -499,7 +507,7 @@ public class MLPerfEvaluation extends AppCompatActivity implements Handler.Callb
     private boolean extractFile(String src) {
       String dest = MLPerfTasks.getLocalPath(src);
       File destFile = new File(dest);
-      Log.d(TAG, "Preparing " + destFile.getName());
+      publishProgress(destFile.getName());
       destFile.getParentFile().mkdirs();
       // Extract to a temporary file first, so the app can detects if the extraction failed.
       File tmpFile = new File(dest + ".tmp");
@@ -548,9 +556,13 @@ public class MLPerfEvaluation extends AppCompatActivity implements Handler.Callb
     }
 
     @Override
+    protected void onProgressUpdate(String... filenames) {
+      ((MLPerfEvaluation) contextRef.get()).logProgress("Extracting " + filenames[0] + "...");
+    }
+
+    @Override
     protected void onPostExecute(Void result) {
       if (success) {
-        Log.d(TAG, "All missing files are extracted.");
         ((MLPerfEvaluation) contextRef.get()).logProgress("All missing files are extracted.");
         ((MLPerfEvaluation) contextRef.get()).setModelIsAvailable();
       } else {

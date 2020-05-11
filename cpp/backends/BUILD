@@ -35,3 +35,17 @@ cc_library(
         "@org_tensorflow//tensorflow/lite/tools/evaluation/stages:tflite_inference_stage",
     ],
 )
+
+cc_library(
+    name = "dummy_backend",
+    srcs = ["dummy_backend.cc"],
+    hdrs = [
+        "dummy_backend.h",
+    ],
+    copts = tflite_copts(),
+    deps = [
+        "//cpp:mlperf_driver",
+        "//cpp:utils",
+        "@backend_dummy_api//dummy_api",
+    ],
+)

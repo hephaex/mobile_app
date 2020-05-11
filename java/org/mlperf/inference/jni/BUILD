@@ -26,6 +26,7 @@ cc_library(
         "backend_jni.cc",
         "dataset_jni.cc",
         "mlperf_driver_jni.cc",
+        "read_config.cc",
     ],
     copts = tflite_copts(),
     linkopts = [
@@ -34,10 +35,13 @@ cc_library(
     ],
     deps = [
         "//cpp:mlperf_driver",
+        "//cpp/backends:dummy_backend",
         "//cpp/backends:tflite",
         "//cpp/datasets:coco",
         "//cpp/datasets:dummy_dataset",
         "//cpp/datasets:imagenet",
+        "//cpp/proto:mlperf_task_cc_proto",
+        "@com_google_protobuf//:protobuf",
         "@org_tensorflow//tensorflow/lite/java/src/main/native",
         "@org_tensorflow//tensorflow/lite/java/src/main/native:native_framework_only",
         "@org_tensorflow//tensorflow/lite/nnapi:nnapi_implementation",

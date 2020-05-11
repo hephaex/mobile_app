@@ -44,6 +44,7 @@ inline TfLiteType DataType2TfType(DataType::Type type) {
     case DataType::Float16:
       return kTfLiteFloat16;
   }
+  return kTfLiteNoType;
 }
 
 // Default cropping fraction value.

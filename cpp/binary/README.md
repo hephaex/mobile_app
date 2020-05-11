@@ -20,7 +20,7 @@ Each set of (backend, dataset) has a different set of arguments, so please use
 
 ```bash
 bazel run  -c opt --cxxopt='--std=c++14' -- \
-  //cpp/binary:main TFLITE DUMMY --help
+  //cpp/binary:main TFLITE IMAGENET --help
 ```
 
 The supported backends and datasets for this binary is listed in the enum

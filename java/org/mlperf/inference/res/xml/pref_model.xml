@@ -1,19 +1,46 @@
 <androidx.preference.PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
+
   <androidx.preference.PreferenceCategory
-      android:title="TensorFlow Lite"
+      android:title="General Settings"
       app:iconSpaceReserved="false">
-    <androidx.preference.MultiSelectListPreference
-        android:defaultValue="@array/delegates_default"
-        android:entries="@array/delegates"
-        android:entryValues="@array/delegates"
-        android:key="@string/pref_delegate_key"
-        android:summary="@string/pref_delegate_sum"
-        android:title="@string/pref_delegate_setting"
+    <androidx.preference.ListPreference
+        android:defaultValue="@string/tflite_preference_key"
+        android:entries="@array/backend_name"
+        android:entryValues="@array/backend_value"
+        android:key="@string/backend_preference_key"
+        android:summary="%s"
+        android:title="@string/backend_preference"
         app:allowDividerBelow="true"
         app:iconSpaceReserved="false" />
-    <!-- NOTE: EditTextPreference accepts EditText attributes. -->
-    <!-- NOTE: EditTextPreference's summary should be set to its value by the activity code. -->
+    <org.mlperf.inference.ModelsPreference
+        android:key="@string/models_preference_key"
+        android:summary="@string/models_preference_sum"
+        android:title="@string/preferences_models"
+        android:persistent="true"
+        app:allowDividerBelow="true"
+        app:iconSpaceReserved="false" />
+    <Preference
+        android:key="@string/custom_config_key"
+        android:summary="@string/custom_config_summary"
+        android:title="Load custom config"
+        app:allowDividerBelow="true"
+        app:iconSpaceReserved="false" />
+    <androidx.preference.ListPreference
+        android:defaultValue="@string/log_short"
+        android:entries="@array/loginfo"
+        android:entryValues="@array/loginfo"
+        android:key="@string/pref_loginfo_key"
+        android:summary="%s"
+        android:title="@string/pref_loginfo_setting"
+        app:allowDividerBelow="true"
+        app:iconSpaceReserved="false" />
+  </androidx.preference.PreferenceCategory>
+
+  <androidx.preference.PreferenceCategory
+      android:title="TensorFlow Lite"
+      android:key="@string/tflite_preference_key"
+      app:iconSpaceReserved="false">
     <androidx.preference.EditTextPreference
         android:defaultValue="@string/num_threads_default"
         android:inputType="number"
@@ -25,19 +52,32 @@
         app:allowDividerBelow="true"
         app:iconSpaceReserved="false"
         app:useSimpleSummaryProvider="true" />
+    <!-- NOTE: EditTextPreference accepts EditText attributes. -->
+    <!-- NOTE: EditTextPreference's summary should be set to its value by the activity code. -->
+    <androidx.preference.MultiSelectListPreference
+        android:defaultValue="@array/delegates_default"
+        android:entries="@array/delegates"
+        android:entryValues="@array/delegates"
+        android:key="@string/pref_delegate_key"
+        android:summary="@string/pref_delegate_sum"
+        android:title="@string/pref_delegate_setting"
+        app:allowDividerBelow="true"
+        app:iconSpaceReserved="false" />
   </androidx.preference.PreferenceCategory>
 
   <androidx.preference.PreferenceCategory
-      android:title="General Settings"
+      android:title="Dummy Backend"
+      android:key="@string/dummy_backend_preference_key"
       app:iconSpaceReserved="false">
-    <androidx.preference.ListPreference
-        android:defaultValue="@string/log_short"
-        android:entries="@array/loginfo"
-        android:entryValues="@array/loginfo"
-        android:key="@string/pref_loginfo_key"
-        android:summary="%s"
-        android:title="@string/pref_loginfo_setting"
+    <androidx.preference.EditTextPreference
+        android:defaultValue="Sample text"
+        android:key="dummy_preference"
+        android:maxLines="1"
+        android:selectAllOnFocus="true"
+        android:singleLine="true"
+        android:title="Example setting"
         app:allowDividerBelow="true"
-        app:iconSpaceReserved="false" />
+        app:iconSpaceReserved="false"
+        android:summary="Example setting for a backend" />
   </androidx.preference.PreferenceCategory>
 </androidx.preference.PreferenceScreen>

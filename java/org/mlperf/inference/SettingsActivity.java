@@ -15,33 +15,25 @@ limitations under the License.
 package org.mlperf.inference;
 
 import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.text.InputType;
-import android.view.LayoutInflater;
-import android.view.View;
+import android.util.Log;
 import android.widget.EditText;
-import android.widget.LinearLayout;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.fragment.app.Fragment;
-import androidx.preference.DialogPreference;
 import androidx.preference.EditTextPreference;
 import androidx.preference.MultiSelectListPreference;
 import androidx.preference.Preference;
-import androidx.preference.PreferenceDialogFragmentCompat;
 import androidx.preference.PreferenceFragmentCompat;
-import androidx.preference.PreferenceScreen;
-import com.google.android.material.chip.Chip;
-import com.google.android.material.chip.ChipGroup;
-import com.google.android.material.switchmaterial.SwitchMaterial;
+import androidx.preference.PreferenceManager;
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
-import org.mlperf.proto.MLPerfConfig;
-import org.mlperf.proto.ModelConfig;
-import org.mlperf.proto.TaskConfig;
 
 /**
  * A {@link PreferenceActivity} that presents a set of application settings. On handset devices,
@@ -101,16 +93,38 @@ public class SettingsActivity extends AppCompatActivity {
       delegatePreference.setEntries(entries.toArray(new CharSequence[entries.size()]));
       delegatePreference.setEntryValues(entryValues.toArray(new CharSequence[entryValues.size()]));
 
-      // Add a new ModelsPreference.
-      PreferenceScreen screen = getPreferenceScreen();
-      ModelsPreference modelsPref = new ModelsPreference(getContext());
-      modelsPref.setKey(getString(R.string.models_preference_key));
-      modelsPref.setTitle(getString(R.string.preferences_models));
-      modelsPref.setSummary(getString(R.string.models_preference_sum));
-      modelsPref.setDialogTitle(getString(R.string.preferences_models));
-      modelsPref.setIconSpaceReserved(false);
-      modelsPref.setPersistent(true);
-      screen.addPreference(modelsPref);
+      // Load custom configuration.
+      Context context = getPreferenceManager().getContext();
+      SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(context);
+      Preference customConfig = (Preference) findPreference(getString(R.string.custom_config_key));
+      customConfig.setOnPreferenceClickListener(
+          new Preference.OnPreferenceClickListener() {
+            @Override
+            public boolean onPreferenceClick(Preference preference) {
+              Intent intent = new Intent(Intent.ACTION_GET_CONTENT, null);
+              intent.setType("*/*");
+              startActivityForResult(intent, 0);
+              return true;
+            }
+          });
+      String configSummary = sharedPref.getString(getString(R.string.config_summary_key), null);
+      if (configSummary != null) {
+        customConfig.setSummary(configSummary);
+      }
+
+      // Set visibility for backend setting groups.
+      String selected_backend =
+          sharedPref.getString(
+              getString(R.string.backend_preference_key),
+              getString(R.string.tflite_preference_key));
+      setBackendSettingsVisibility(selected_backend);
+      getPreferenceManager()
+          .findPreference(getString(R.string.backend_preference_key))
+          .setOnPreferenceChangeListener(
+              (pref, value) -> {
+                setBackendSettingsVisibility((String) value);
+                return true;
+              });
     }
 
     @Override
@@ -121,111 +135,50 @@ public class SettingsActivity extends AppCompatActivity {
         super.onDisplayPreferenceDialog(preference);
       }
     }
-  }
-
-  /** Preference for selecting models. */
-  private static class ModelsPreference extends DialogPreference {
-    public ModelsPreference(Context context) {
-      super(context);
-      super.setPersistent(false);
-      super.setNegativeButtonText(android.R.string.cancel);
-      super.setPositiveButtonText(android.R.string.ok);
-      setDialogLayoutResource(R.layout.models_pref);
-    }
-
-    public void showDialog(Fragment target) {
-      ModelsPreferenceDialogFragment fragment =
-          ModelsPreferenceDialogFragment.newInstance(
-              target.getContext(), getKey(), new HashSet<>(getPersistedStringSet(null)));
-      fragment.setTargetFragment(target, 0);
-      fragment.show(target.getFragmentManager(), "androidx.preference.PreferenceFragment.DIALOG");
-    }
-
-    public void setModels(Set<String> selectedModels) {
-      if (selectedModels.equals(getPersistedStringSet(null))) {
-        return;
-      }
-      persistStringSet(selectedModels);
-      notifyChanged();
-    }
-  }
-
-  /** This fragment shows ModelsPreference in a dialog. */
-  public static class ModelsPreferenceDialogFragment extends PreferenceDialogFragmentCompat {
-    private MLPerfConfig mlperfTasks;
-    private Context context;
-    private Set<String> selectedModels;
-
-    public static ModelsPreferenceDialogFragment newInstance(
-        Context context, String key, Set<String> models) {
-      ModelsPreferenceDialogFragment fragment = new ModelsPreferenceDialogFragment();
-      fragment.context = context;
-      fragment.selectedModels = models;
-      fragment.mlperfTasks = MLPerfTasks.getConfig(context);
-      Bundle bundle = new Bundle(1);
-      bundle.putString(ARG_KEY, key);
-      fragment.setArguments(bundle);
-      return fragment;
-    }
 
     @Override
-    protected void onBindDialogView(View view) {
-      super.onBindDialogView(view);
-      LinearLayout prefLayout = (LinearLayout) view.findViewById(R.id.container);
-      LayoutInflater inflater = LayoutInflater.from(context);
-      for (TaskConfig task : mlperfTasks.getTaskList()) {
-        // Add a switch to select or deselect all models in a task.
-        View taskView = inflater.inflate(R.layout.models_group, prefLayout, false);
-        SwitchMaterial taskSwitch = (SwitchMaterial) taskView.findViewById(R.id.tasksSwitch);
-        taskSwitch.setText(task.getName());
-        ChipGroup modelsGroup = (ChipGroup) taskView.findViewById(R.id.modelsGroup);
-        // Add models of that task as chips.
-        for (ModelConfig model : task.getModelList()) {
-          Chip modelchip = (Chip) inflater.inflate(R.layout.models_item, modelsGroup, false);
-          String modelName = model.getName();
-          modelchip.setText(model.getTags());
-          modelchip.setOnCheckedChangeListener(
-              (chipView, isChecked) -> {
-                // The switch is on if all models are selected.
-                if (isChecked) {
-                  taskSwitch.setChecked(true);
-                  selectedModels.add(modelName);
-                } else {
-                  selectedModels.remove(modelName);
-                }
-                if (modelsGroup.getCheckedChipIds().isEmpty()) {
-                  taskSwitch.setChecked(false);
-                }
-              });
-          if (selectedModels.contains(modelName)) {
-            modelchip.setChecked(true);
-            taskSwitch.setChecked(true);
-          }
-          modelsGroup.addView(modelchip);
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+      super.onActivityResult(requestCode, resultCode, data);
+      Context context = getPreferenceManager().getContext();
+      try {
+        InputStream is = context.getContentResolver().openInputStream(data.getData());
+        BufferedReader buffreader = new BufferedReader(new InputStreamReader(is, "UTF-8"));
+        String line;
+        StringBuilder stringBuilder = new StringBuilder();
+        while ((line = buffreader.readLine()) != null) {
+          stringBuilder.append(line);
+          stringBuilder.append('\n');
         }
-        // Toggle models based on the task switch status.
-        taskSwitch.setOnClickListener(
-            (switchView) -> {
-              if (((SwitchMaterial) switchView).isChecked()) {
-                // Set all models of this task as checked.
-                for (int idx = 0; idx < modelsGroup.getChildCount(); ++idx) {
-                  Chip chip = (Chip) modelsGroup.getChildAt(idx);
-                  chip.setChecked(true);
-                }
-              } else {
-                modelsGroup.clearCheck();
-              }
-            });
-        prefLayout.addView(taskView);
+        String text = stringBuilder.toString();
+        if (MLPerfTasks.loadCustomConfig(text)) {
+          SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
+          SharedPreferences.Editor editor = preferences.edit();
+          // Store the file content instead of the file path because the app only has read access
+          // to this file via Uri inside onActivityResult. This means whenever the file is edited,
+          // it needs to be re-selected again.
+          editor.putString(getString(R.string.custom_config_key), text);
+          editor.putString(getString(R.string.config_summary_key), data.getData().getPath());
+          editor.commit();
+          Preference customConfig =
+              (Preference) findPreference(getString(R.string.custom_config_key));
+          customConfig.setSummary(data.getData().getPath());
+        }
+      } catch (Exception e) {
+        Log.e("Setting", "Failed to read text config file: " + e.getMessage());
       }
     }
 
-    @Override
-    public void onDialogClosed(boolean positiveResult) {
-      if (!positiveResult) {
-        return;
+    // Set preference group of selected backend to be visible.
+    private void setBackendSettingsVisibility(String selected_backend) {
+      Context context = getPreferenceManager().getContext();
+      String[] backend_list = context.getResources().getStringArray(R.array.backend_value);
+      for (String backend : backend_list) {
+        if (backend.equals(selected_backend)) {
+          getPreferenceManager().findPreference(backend).setVisible(true);
+        } else {
+          getPreferenceManager().findPreference(backend).setVisible(false);
+        }
       }
-      ((ModelsPreference) getPreference()).setModels(selectedModels);
     }
   }
 }

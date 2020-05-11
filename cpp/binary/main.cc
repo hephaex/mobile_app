@@ -52,7 +52,10 @@ DatasetConfig::DatasetType Str2DatasetType(absl::string_view name) {
     return DatasetConfig::IMAGENET;
   } else if (absl::EqualsIgnoreCase(name, "MOBILEBERT")) {
     return DatasetConfig::MOBILEBERT;
+  } else if (absl::EqualsIgnoreCase(name, "DUMMY")) {
+    return DatasetConfig::NONE;
   } else {
+    LOG(FATAL) << "Unregconized dataset type: " << name;
     return DatasetConfig::NONE;
   }
 }
@@ -72,13 +75,12 @@ int Main(int argc, char* argv[]) {
                        "Backend. Only TFLite is supported at the moment.",
                        Flag::POSITIONAL),
       Flag::CreateFlag("dataset", &dataset_name,
-                       "Dataset. One of imagenet, coco or dummy.",
+                       "Dataset. One of imagenet, coco, mobilebert or dummy.",
                        Flag::POSITIONAL)};
   Flags::Parse(&argc, const_cast<const char**>(argv), flag_list);
   backend_type = Str2BackendType(backend_name);
   dataset_type = Str2DatasetType(dataset_name);
-  if (backend_type == BackendType::NONE ||
-      dataset_type == DatasetConfig::NONE) {
+  if (backend_type == BackendType::NONE) {
     LOG(FATAL) << Flags::Usage(command_line, flag_list);
     return 1;
   }
@@ -170,14 +172,6 @@ int Main(int argc, char* argv[]) {
       flag_list.insert(flag_list.end(), dataset_flags.begin(),
                        dataset_flags.end());
     } break;
-    case DatasetConfig::NONE: {
-      LOG(INFO) << "Using Dummy dataset";
-      if (backend) {
-        dataset.reset(new DummyDataset(backend->GetInputFormat(),
-                                       backend->GetOutputFormat(),
-                                       dataset_type));
-      }
-    } break;
     case DatasetConfig::COCO: {
       LOG(INFO) << "Using Coco dataset";
       std::string images_directory, groundtruth_file;
@@ -209,6 +203,22 @@ int Main(int argc, char* argv[]) {
       // Adds to flag_list for showing help.
       flag_list.insert(flag_list.end(), dataset_flags.begin(),
                        dataset_flags.end());
+    } break;
+    case DatasetConfig::MOBILEBERT: {
+      LOG(INFO) << "MobileBert is currently supported with random input.";
+      if (backend) {
+        dataset.reset(new DummyDataset(backend->GetInputFormat(),
+                                       backend->GetOutputFormat(),
+                                       DatasetConfig::MOBILEBERT));
+      }
+    } break;
+    case DatasetConfig::NONE: {
+      LOG(INFO) << "Using Dummy dataset";
+      if (backend) {
+        dataset.reset(new DummyDataset(backend->GetInputFormat(),
+                                       backend->GetOutputFormat(),
+                                       dataset_type));
+      }
     } break;
     default:
       break;

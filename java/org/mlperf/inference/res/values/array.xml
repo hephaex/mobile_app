@@ -13,4 +13,18 @@
     <item>@string/log_short</item>
     <item>@string/log_full</item>
   </string-array>
+
+  <!-- Dummy Backend is disabled in UI by default. If you want to see how it works,
+  please remove the its comments here. -->
+  <string-array name="backend_name" description="backend name strings [CHAR_LIMIT=50]">
+    <item>TFLite</item>
+    <!-- <item>Dummy Backend</item> -->
+  </string-array>
+  <!-- Use the key of the preference group of that backend as value.
+  SettingActivity will only show the preference group of the selected backend.
+  Please keep the array here in the same order as backend_name. -->
+  <string-array name="backend_value" description="backend name strings [CHAR_LIMIT=50]">
+    <item>@string/tflite_preference_key</item>
+    <item>@string/dummy_backend_preference_key</item>
+  </string-array>
 </resources>

@@ -17,6 +17,7 @@ limitations under the License.
 #include <memory>
 #include <string>
 
+#include "cpp/backends/dummy_backend.h"
 #include "cpp/backends/tflite.h"
 #include "tensorflow/lite/nnapi/nnapi_implementation.h"
 
@@ -39,6 +40,19 @@ JNIEXPORT jlong JNICALL Java_org_mlperf_inference_MLPerfDriverWrapper_tflite(
     env->ThrowNew(env->FindClass("java/lang/Exception"),
                   "failed to apply delegate");
   }
+  return reinterpret_cast<jlong>(backend_ptr.release());
+}
+
+JNIEXPORT jlong JNICALL
+Java_org_mlperf_inference_MLPerfDriverWrapper_dummyBackend(
+    JNIEnv* env, jclass clazz, jstring jmodel_file_path) {
+  // Convert parameters to C++.
+  std::string model_file_path =
+      env->GetStringUTFChars(jmodel_file_path, nullptr);
+
+  // Create a new TfliteBackend object.
+  std::unique_ptr<mlperf::mobile::DummyBackend> backend_ptr(
+      new mlperf::mobile::DummyBackend(model_file_path));
   return reinterpret_cast<jlong>(backend_ptr.release());
 }
 

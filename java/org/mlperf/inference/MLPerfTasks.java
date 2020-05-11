@@ -15,7 +15,9 @@ limitations under the License.
 package org.mlperf.inference;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.util.Log;
+import androidx.preference.PreferenceManager;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -32,17 +34,31 @@ final class MLPerfTasks {
 
   public static MLPerfConfig getConfig(Context context) {
     if (mlperfTasks == null) {
-      // The proto file is checked at compile time, the exception is unlikely to happen.
-      try {
-        InputStream inputStream = context.getResources().openRawResource(R.raw.tasks_pb);
-        mlperfTasks = MLPerfConfig.parseFrom(inputStream);
-        inputStream.close();
-        localDir = context.getFilesDir().getPath();
-      } catch (IOException e) {
-        Log.e(TAG, "Unable to read config proto file");
+      localDir = context.getFilesDir().getPath();
+      SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(context);
+      String customConfig =
+          sharedPref.getString(context.getString(R.string.custom_config_key), null);
+      if (customConfig == null || !loadCustomConfig(customConfig)) {
+        try {
+          InputStream inputStream = context.getResources().openRawResource(R.raw.tasks_pb);
+          mlperfTasks = MLPerfConfig.parseFrom(inputStream);
+          inputStream.close();
+        } catch (IOException e) {
+          Log.e(TAG, "Unable to read config proto file");
+        }
       }
     }
     return mlperfTasks;
+  }
+
+  public static boolean loadCustomConfig(String text) {
+    try {
+      mlperfTasks = MLPerfConfig.parseFrom(MLPerfDriverWrapper.convertProto(text));
+    } catch (Exception e) {
+      Log.e(TAG, "Failed to read text config file: " + e.getMessage());
+      return false;
+    }
+    return true;
   }
 
   public static String getLocalPath(String path) {
