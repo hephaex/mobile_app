@@ -59,13 +59,16 @@ Java_org_mlperf_inference_MLPerfDriverWrapper_nativeInit(JNIEnv* env,
 
 JNIEXPORT void JNICALL Java_org_mlperf_inference_MLPerfDriverWrapper_nativeRun(
     JNIEnv* env, jclass clazz, jlong driver_handle, jstring jmode,
-    jint min_query_count, jint min_duration, jstring joutput_dir) {
+    jstring jscenario, jint min_query_count, jint min_duration,
+    jstring joutput_dir) {
   // Convert parameters to C++.
   std::string mode = env->GetStringUTFChars(jmode, nullptr);
+  std::string scenario = env->GetStringUTFChars(jscenario, nullptr);
   std::string output_dir = env->GetStringUTFChars(joutput_dir, nullptr);
   // Start the test.
   convertLongToMlperfDriver(env, driver_handle)
-      ->RunMLPerfTest(mode, min_query_count, min_duration, output_dir);
+      ->RunMLPerfTest(mode, scenario, min_query_count, min_duration,
+                      output_dir);
 }
 
 JNIEXPORT jstring JNICALL

@@ -37,7 +37,7 @@ class Dataset : public ::mlperf::QuerySampleLibrary {
   ~Dataset() override {}
 
   // The number of samples that are guaranteed to fit in RAM.
-  size_t PerformanceSampleCount() final {
+  size_t PerformanceSampleCount() override {
     int sample_size = 0;
     for (const DataType& data_type : input_format_) {
       sample_size += data_type.size * data_type.GetByte();

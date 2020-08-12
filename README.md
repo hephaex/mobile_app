@@ -43,7 +43,7 @@ frameworks contributed by the broader MLPerf community.
 
 ## Requirements
 
-*   [Bazel](https://docs.bazel.build/versions/master/install-ubuntu.html)
+*   [Bazel 2.x](https://docs.bazel.build/versions/master/install-ubuntu.html)
 *   [Android SDK](https://developer.android.com/studio)
 *   Android 6.0+ (Marshmallow+) w/
     [USB debugging enabled](https://developer.android.com/studio/debug/dev-options)
@@ -51,8 +51,8 @@ frameworks contributed by the broader MLPerf community.
 ## Getting Started
 
 There are two ways to build the app. If you want to make your own environment,
-first make sure to download the SDK and NDK using the Android studio. Then set
-the following environment variables:
+first make sure to download the SDK and NDK using the Android studio. The build
+was tested with NDK r17c. Then set the following environment variables:
 
 ```bash
 export ANDROID_HOME=Path/to/SDK # Ex: $HOME/Android/Sdk
@@ -62,7 +62,7 @@ export ANDROID_NDK_HOME=Path/to/NDK # Ex: $ANDROID_HOME/ndk/(your version)
 The app can be built and installed with the following commands:
 
 ```bash
-bazel build -c opt --cxxopt='--std=c++14' \
+bazel build -c opt --cxxopt='--std=c++14' --host_cxxopt='--std=c++14' \
     --fat_apk_cpu=x86,arm64-v8a,armeabi-v7a \
     //java/org/mlperf/inference:mlperf_app
 
@@ -78,7 +78,7 @@ docker run \
     -v <path to your cache dir>:/cache \
     -w /mobile_app \
     thaink/android-bazel:latest --output_user_root=/cache/bazel build \
-    -c opt --cxxopt='--std=c++14' \
+    -c opt --cxxopt='--std=c++14' --host_cxxopt='--std=c++14' \
     --fat_apk_cpu=x86,arm64-v8a,armeabi-v7a \
     //java/org/mlperf/inference:mlperf_app
 

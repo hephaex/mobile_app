@@ -22,6 +22,7 @@ build:android_x86_64 --fat_apk_cpu=x86_64
 # Set the host crosstool so genrule could be build successfully.
 build --fat_apk_cpu=x86,arm64-v8a,armeabi-v7a
 build --host_crosstool_top=@bazel_tools//tools/cpp:toolchain
+build --experimental_repo_remote_exec
 test --fat_apk_cpu=x86,arm64-v8a,armeabi-v7a
 test --host_crosstool_top=@bazel_tools//tools/cpp:toolchain
 

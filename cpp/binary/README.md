@@ -6,7 +6,7 @@ mlperf benchmark with a specific set of (backend, dataset).
 For example, the following command to run TFLite with the dummy dataset:
 
 ```bash
-bazel run  -c opt --cxxopt='--std=c++14' -- \
+bazel run  -c opt --cxxopt='--std=c++14' --host_cxxopt='--std=c++14' -- \
   //cpp/binary:main TFLITE DUMMY \
   --mode=SubmissionRun \
   --model_file=<path to the model file> \
@@ -19,7 +19,7 @@ Each set of (backend, dataset) has a different set of arguments, so please use
 `--help` argument to check which flags are available. Ex:
 
 ```bash
-bazel run  -c opt --cxxopt='--std=c++14' -- \
+bazel run  -c opt --cxxopt='--std=c++14' --host_cxxopt='--std=c++14' -- \
   //cpp/binary:main TFLITE IMAGENET --help
 ```
 

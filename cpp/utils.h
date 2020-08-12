@@ -17,6 +17,7 @@ limitations under the License.
 
 #include <cstdint>
 #include <numeric>
+#include <string>
 #include <vector>
 
 #include "loadgen/test_settings.h"
@@ -91,6 +92,15 @@ inline ::mlperf::TestMode Str2TestMode(const std::string& mode) {
     return ::mlperf::TestMode::PerformanceOnly;
   }
 }
+
+const std::string kMobilenetOfflineScenario = "mobilenet-offline";
+
+const size_t kMobilenetOfflineSampleCount = 5000;
+// TODO: Move the following parameters to mlperf_task.proto
+// These parameters will set 1100 samples_per_query. (10% more queries included)
+// For 11000 samples_per_query, use 10000, 1000
+const size_t kMobilenetOfflineMinDurationMs = 5000;
+const size_t kMobilenetOfflineExpectedQps = 200;
 
 }  // namespace mobile
 }  // namespace mlperf

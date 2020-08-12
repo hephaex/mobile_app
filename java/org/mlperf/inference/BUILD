@@ -66,6 +66,7 @@ android_binary(
         "assets/*.tflite",
         "assets/*.txt",
         "assets/*.pbtxt",
+        "assets/*.tfrecord",
     ]),
     assets_dir = "assets",
     manifest = "AndroidManifest.xml",

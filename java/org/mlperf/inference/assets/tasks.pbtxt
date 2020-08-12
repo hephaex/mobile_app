@@ -7,16 +7,30 @@ task {
     groundtruth_src: "@assets/imagenet_val.txt"
   }
   model {
-    name: "MobileNetEdgeTPU 224 1.0 Int8"
-    src: "https://github.com/mlperf/mobile_app/raw/model_repo_v0.7/tflite/mobilenet_edgetpu_224_1.0_int8.tflite"
+    name: "MobileNetEdgeTPU 224 1.0 Uint8"
+    src: "https://github.com/mlperf/mobile_app/raw/model_repo_v0.7/tflite/mobilenet_edgetpu_224_1.0_uint8.tflite"
     offset: 1
-    tags: "int8"
+    tags: "uint8"
   }
   model {
     name: "MobileNetEdgeTPU 224 1.0 F32"
     src: "https://github.com/mlperf/mobile_app/raw/model_repo_v0.7/tflite/mobilenet_edgetpu_224_1.0_float.tflite"
     offset: 1
     tags: "float32"
+  }
+  model {
+    name: "MobileNetEdgeTPU 224 1.0 Uint8 (offline)"
+    src: "https://github.com/mlperf/mobile_app/raw/model_repo_v0.7/tflite/mobilenet_edgetpu_224_1.0_uint8.tflite"
+    offset: 1
+    tags: "uint8-offline"
+    scenario: "mobilenet-offline"
+  }
+  model {
+    name: "MobileNetEdgeTPU 224 1.0 F32 (offline)"
+    src: "https://github.com/mlperf/mobile_app/raw/model_repo_v0.7/tflite/mobilenet_edgetpu_224_1.0_float.tflite"
+    offset: 1
+    tags: "float32-offline"
+    scenario: "mobilenet-offline"
   }
   min_query_count: 100
   min_duration_ms: 1000
@@ -49,14 +63,30 @@ task {
 task {
   name: " Language Understanding"
   dataset {
-    name: "Dummy"
-    type: MOBILEBERT
-    path: "/sdcard/mlperf_datasets/mobilebert/"
+    name: "Squad"
+    type: SQUAD
+    path: "@assets/squad_eval_mini.tfrecord"
+    groundtruth_src: "@assets/squad_groundtruth.tfrecord"
   }
   model {
     name: "MobileBert F32"
-    src: "https://github.com/mlperf/mobile_app/raw/model_repo_v0.7/tflite/mobilebert_float_20191023.tflite"
+    src: "https://github.com/mlperf/mobile_app/raw/model_repo_v0.7/tflite/mobilebert_float_384_20200602.tflite"
     tags: "float32"
+  }
+  model {
+    name: "MobileBert F32 for GPU"
+    src: "https://github.com/mlperf/mobile_app/raw/model_repo_v0.7/tflite/mobilebert_float_384_gpu.tflite"
+    tags: "float32-gpu"
+  }
+  model {
+    name: "MobileBert Int8"
+    src: "https://github.com/mlperf/mobile_app/raw/model_repo_v0.7/tflite/mobilebert_int8_384_20200602.tflite"
+    tags: "int8"
+  }
+  model {
+    name: "MobileBert Int8 for NNAPI"
+    src: "https://github.com/mlperf/mobile_app/raw/model_repo_v0.7/tflite/mobilebert_int8_384_nnapi.tflite"
+    tags: "int8-nnapi"
   }
   min_query_count: 100
   min_duration_ms: 1000
@@ -67,13 +97,23 @@ task {
   dataset {
     name: "ADE20k"
     type: ADE20K
-    path: "/sdcard/mlperf_datasets/ade20k/"
+    path: "/sdcard/mlperf_datasets/ade20k/images"
+    groundtruth_src: "/sdcard/mlperf_datasets/ade20k/annotations"
   }
-
   model {
     name: "Deeplab-v3 Mobilenet-v2 F32"
     src: "https://github.com/mlperf/mobile_app/raw/model_repo_v0.7/tflite/deeplabv3_mnv2_ade20k_float.tflite"
     tags: "float32"
+  }
+  model {
+    name: "Deeplab-v3 Mobilenet-v2 UINT8"
+    src: "https://github.com/mlperf/mobile_app/raw/model_repo_v0.7/tflite/deeplabv3_mnv2_ade20k_uint8.tflite"
+    tags: "uint8"
+  }
+  model {
+    name: "Deeplab-v3 Mobilenet-v2 INT8"
+    src: "https://github.com/mlperf/mobile_app/raw/model_repo_v0.7/tflite/deeplabv3_mnv2_ade20k_int8.tflite"
+    tags: "int8"
   }
   min_query_count: 100
   min_duration_ms: 1000

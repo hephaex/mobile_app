@@ -58,6 +58,7 @@ import java.io.OutputStream;
 import java.lang.ref.WeakReference;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
@@ -153,8 +154,12 @@ public class MLPerfEvaluation extends AppCompatActivity implements Handler.Callb
     checkModelIsAvailable();
 
     // Updates the shared preference.
-    backend = sharedPref.getString(getString(R.string.backend_preference_key), null);
-    delegates = sharedPref.getStringSet(getString(R.string.pref_delegate_key), null);
+    backend =
+        sharedPref.getString(
+            getString(R.string.backend_preference_key), getString(R.string.tflite_preference_key));
+    delegates =
+        sharedPref.getStringSet(
+            getString(R.string.pref_delegate_key), new HashSet<String>(Arrays.asList("None")));
     numThreadsPreference =
         Integer.parseInt(
             sharedPref.getString(
@@ -412,7 +417,9 @@ public class MLPerfEvaluation extends AppCompatActivity implements Handler.Callb
   @Override
   public void onDestroy() {
     super.onDestroy();
-    workerThread.quit();
+    if (workerThread != null) {
+      workerThread.quit();
+    }
     Log.d(TAG, "onDestroy() is called.");
   }
 
@@ -495,7 +502,14 @@ public class MLPerfEvaluation extends AppCompatActivity implements Handler.Callb
           }
         }
         DatasetConfig dataset = task.getDataset();
-        if (!new File(MLPerfTasks.getLocalPath(dataset.getGroundtruthSrc())).canRead()) {
+        if (dataset.getPath().startsWith(ASSETS_PREFIX)
+            && !new File(MLPerfTasks.getLocalPath(dataset.getPath())).canRead()) {
+          if (!extractFile(dataset.getPath())) {
+            success = false;
+          }
+        }
+        if (dataset.getGroundtruthSrc().startsWith(ASSETS_PREFIX)
+            && (!new File(MLPerfTasks.getLocalPath(dataset.getGroundtruthSrc())).canRead())) {
           if (!extractFile(dataset.getGroundtruthSrc())) {
             success = false;
           }

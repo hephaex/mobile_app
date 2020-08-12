@@ -18,9 +18,11 @@ limitations under the License.
 #include <string>
 
 #include "cpp/backend.h"
+#include "cpp/datasets/ade20k.h"
 #include "cpp/datasets/coco.h"
 #include "cpp/datasets/dummy_dataset.h"
 #include "cpp/datasets/imagenet.h"
+#include "cpp/datasets/squad.h"
 #include "tensorflow/lite/java/src/main/native/jni_utils.h"
 
 using mlperf::mobile::Backend;
@@ -41,18 +43,19 @@ extern "C" {
 
 JNIEXPORT jlong JNICALL Java_org_mlperf_inference_MLPerfDriverWrapper_imagenet(
     JNIEnv* env, jclass clazz, jlong backend_handle, jstring jimage_dir,
-    jstring jgroundtruth_file, jint offset, jint image_width,
-    jint image_height) {
+    jstring jgroundtruth_file, jint offset, jint image_width, jint image_height,
+    jstring jscenario) {
   // Convert parameters to C++.
   Backend* backend = convertLongToBackend(env, backend_handle);
   std::string image_dir = env->GetStringUTFChars(jimage_dir, nullptr);
   std::string gt_file = env->GetStringUTFChars(jgroundtruth_file, nullptr);
+  std::string scenario = env->GetStringUTFChars(jscenario, nullptr);
 
   // Create a new Imagenet object.
   std::unique_ptr<mlperf::mobile::Imagenet> imagenet_ptr(
-      new mlperf::mobile::Imagenet(backend->GetInputFormat(),
-                                   backend->GetOutputFormat(), image_dir,
-                                   gt_file, offset, image_width, image_height));
+      new mlperf::mobile::Imagenet(
+          backend->GetInputFormat(), backend->GetOutputFormat(), image_dir,
+          gt_file, offset, image_width, image_height, scenario));
   return reinterpret_cast<jlong>(imagenet_ptr.release());
 }
 
@@ -72,6 +75,36 @@ JNIEXPORT jlong JNICALL Java_org_mlperf_inference_MLPerfDriverWrapper_coco(
   return reinterpret_cast<jlong>(coco_ptr.release());
 }
 
+JNIEXPORT jlong JNICALL Java_org_mlperf_inference_MLPerfDriverWrapper_squad(
+    JNIEnv* env, jclass clazz, jlong backend_handle, jstring jinput_file,
+    jstring jgroundtruth_file) {
+  // Convert parameters to C++.
+  Backend* backend = convertLongToBackend(env, backend_handle);
+  std::string input_file = env->GetStringUTFChars(jinput_file, nullptr);
+  std::string gt_file = env->GetStringUTFChars(jgroundtruth_file, nullptr);
+
+  // Create a new Squad object.
+  std::unique_ptr<mlperf::mobile::Squad> squad_ptr(new mlperf::mobile::Squad(
+      backend->GetInputFormat(), backend->GetOutputFormat(), input_file,
+      gt_file));
+  return reinterpret_cast<jlong>(squad_ptr.release());
+}
+
+JNIEXPORT jlong JNICALL Java_org_mlperf_inference_MLPerfDriverWrapper_ade20k(
+    JNIEnv* env, jclass clazz, jlong backend_handle, jstring jimage_dir,
+    jstring groundtruth_dir, jint num_classes, jint image_width,
+    jint image_height) {
+  // Convert parameters to C++.
+  Backend* backend = convertLongToBackend(env, backend_handle);
+  std::string image_dir = env->GetStringUTFChars(jimage_dir, nullptr);
+  std::string gt_dir = env->GetStringUTFChars(groundtruth_dir, nullptr);
+
+  // Create a new Ade20k object.
+  std::unique_ptr<mlperf::mobile::ADE20K> ade20k_ptr(new mlperf::mobile::ADE20K(
+      backend->GetInputFormat(), backend->GetOutputFormat(), image_dir, gt_dir,
+      num_classes, image_width, image_height));
+  return reinterpret_cast<jlong>(ade20k_ptr.release());
+}
 JNIEXPORT jlong JNICALL
 Java_org_mlperf_inference_MLPerfDriverWrapper_dummyDataset(JNIEnv* env,
                                                            jclass clazz,

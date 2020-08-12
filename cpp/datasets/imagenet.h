@@ -35,7 +35,8 @@ class Imagenet : public Dataset {
   // LSVRC2012 dataset.
   Imagenet(const DataFormat& input_format, const DataFormat& output_format,
            const std::string& image_dir, const std::string& groundtruth_file,
-           int offset, int image_width, int image_height);
+           int offset, int image_width, int image_height,
+           const std::string& scenario);
 
   // Returns the name of the dataset.
   const std::string& Name() const override { return name_; }
@@ -69,6 +70,14 @@ class Imagenet : public Dataset {
   // ComputeAccuracyString returns a string representing the accuracy.
   std::string ComputeAccuracyString() override;
 
+  // The number of samples that are guaranteed to fit in RAM.
+  size_t PerformanceSampleCount() override {
+    if (performance_sample_count_override_ > 0) {
+      return performance_sample_count_override_;
+    }
+    return Dataset::PerformanceSampleCount();
+  }
+
  private:
   const std::string name_ = "Imagenet";
   // The ground truth file contains class indexes of each image.
@@ -86,6 +95,7 @@ class Imagenet : public Dataset {
   // preprocessing_stage_ conducts preprocessing of images.
   std::unique_ptr<tflite::evaluation::ImagePreprocessingStage>
       preprocessing_stage_;
+  size_t performance_sample_count_override_;
 };
 
 }  // namespace mobile

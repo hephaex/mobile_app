@@ -63,12 +63,12 @@ public class RunAllTest {
     // Get number of selected models from preference.
     sharedPref =
         PreferenceManager.getDefaultSharedPreferences(InstrumentationRegistry.getTargetContext());
-    int num_models = sharedPref.getStringSet("selected_models", null).size();
+    int num_models = sharedPref.getStringSet("selected_models_v2", null).size();
 
     // Click the play button then wait for all tasks finished.
     onView(withId(R.id.action_play)).perform(click());
     onView(withId(R.id.results_recycler_view))
-        .perform(WaitForViewsAction.waitFor(withRecyclerViewSize(num_models), 6000 * 1000));
+        .perform(WaitForViewsAction.waitFor(withRecyclerViewSize(num_models), 12000 * 1000));
     // Click the refresh button.
     onView(withId(R.id.action_refresh)).perform(click());
     onView(withId(R.id.results_recycler_view))

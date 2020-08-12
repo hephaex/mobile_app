@@ -55,7 +55,8 @@ Imagenet::Imagenet(const DataFormat& input_format,
                    const DataFormat& output_format,
                    const std::string& image_dir,
                    const std::string& groundtruth_file, int offset,
-                   int image_width, int image_height)
+                   int image_width, int image_height,
+                   const std::string& scenario)
     : Dataset(input_format, output_format),
       groundtruth_file_(groundtruth_file),
       offset_(offset) {
@@ -84,6 +85,11 @@ Imagenet::Imagenet(const DataFormat& input_format,
       new tflite::evaluation::ImagePreprocessingStage(builder.build()));
   if (preprocessing_stage_->Init() != kTfLiteOk) {
     LOG(FATAL) << "Failed to init preprocessing stage";
+  }
+  if (scenario == kMobilenetOfflineScenario) {
+    performance_sample_count_override_ = kMobilenetOfflineSampleCount;
+  } else {
+    performance_sample_count_override_ = 0;
   }
 }
 

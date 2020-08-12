@@ -11,26 +11,20 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
-    - name: Cache build results
-      id: cache-build
-      uses: actions/cache@v1
-      with:
-        path: ~/work/_temp/_github_workflow/cache
-        key: bazel-build-cache-linux
-
     - name: Build all
       uses: docker://thaink/android-bazel:latest
       with:
         args: >
           --output_user_root=/github/workflow/cache/bazel build
-          -c opt --cxxopt="--std=c++17" //...
+          -c opt --cxxopt="--std=c++14" --host_cxxopt="--std=c++14" //...
 
     - name: Run unit tests
       uses: docker://thaink/android-bazel:latest
       with:
         args: >
           --output_user_root=/github/workflow/cache/bazel test --test_output=streamed
-          -c opt --cxxopt="--std=c++17" //cpp/...
+          -c opt --cxxopt="--std=c++14" --host_cxxopt="--std=c++14" //cpp/...
+
   test:
     name: Instrument tests
     runs-on: macOS-latest
@@ -42,14 +36,14 @@ jobs:
       uses: actions/cache@v1
       with:
         path: .github/workflows/cache
-        key: bazel-build-cache
+        key: bazel-build-cache-macos
 
     - name: Install bazel
-      run: wget https://github.com/bazelbuild/bazel/releases/download/2.0.0/bazel-2.0.0-installer-darwin-x86_64.sh &&
-        bash bazel-2.0.0-installer-darwin-x86_64.sh --user && bazel --version
+      run: wget https://github.com/bazelbuild/bazel/releases/download/2.0.0/bazel-2.0.0-darwin-x86_64 &&
+        chmod +x bazel-2.0.0-darwin-x86_64 && ./bazel-2.0.0-darwin-x86_64 --version
 
     - name: Install dependencies
-      run: python3 -m pip install six && python -m pip install absl-py future
+      run: python3 -m pip install six numpy && python -m pip install absl-py future numpy
 
     - name: Run tests
       uses: reactivecircus/android-emulator-runner@v2

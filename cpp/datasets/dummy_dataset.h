@@ -34,7 +34,7 @@ class DummyDataset : public Dataset {
       : Dataset(input_format, output_format), dataset_type_(dataset_type) {
     // MobileBert expects to take 3 inputs in following order: input_ids,
     // input_mask and segment_ids.
-    if (dataset_type_ == DatasetConfig::MOBILEBERT &&
+    if (dataset_type_ == DatasetConfig::SQUAD &&
         (input_format_.size() != 3 ||
          input_format_[0].type != DataType::Int32 ||
          input_format_[1].type != DataType::Int32 ||

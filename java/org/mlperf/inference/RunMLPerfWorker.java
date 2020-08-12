@@ -69,7 +69,8 @@ public final class RunMLPerfWorker implements Handler.Callback {
     TaskConfig taskConfig = MLPerfTasks.getConfig(context).getTask(data.taskIdx);
     ModelConfig modelConfig = taskConfig.getModel(data.modelIdx);
     DatasetConfig dataset = taskConfig.getDataset();
-    boolean useDummyDataSet = !new File(dataset.getPath()).isDirectory();
+    boolean useDummyDataSet =
+        !dataset.getPath().contains("@assets/") && !new File(dataset.getPath()).isDirectory();
     String modelName = modelConfig.getName();
     String runtime = computeRuntimeString(data.numThreads, data.delegate);
     replyWithUpdateMessage(
@@ -99,7 +100,8 @@ public final class RunMLPerfWorker implements Handler.Callback {
                 MLPerfTasks.getLocalPath(dataset.getGroundtruthSrc()),
                 modelConfig.getOffset(),
                 /*imageWidth=*/ 224,
-                /*imageHeight=*/ 224);
+                /*imageHeight=*/ 224,
+                modelConfig.getScenario());
             break;
           case COCO:
             builder.useCoco(
@@ -110,11 +112,28 @@ public final class RunMLPerfWorker implements Handler.Callback {
                 /*imageWidth=*/ 300,
                 /*imageHeight=*/ 300);
             break;
+          case SQUAD:
+            builder.useSquad(
+                MLPerfTasks.getLocalPath(dataset.getPath()),
+                MLPerfTasks.getLocalPath(dataset.getGroundtruthSrc()));
+            break;
+          case ADE20K:
+            builder.useAde20k(
+                dataset.getPath(),
+                dataset.getGroundtruthSrc(),
+                /*numClasses=*/ 31,
+                /*imageWidth=*/ 512,
+                /*imageHeight=*/ 512);
+            break;
         }
       }
       MLPerfDriverWrapper driverWrapper = builder.build();
       driverWrapper.runMLPerf(
-          mode, taskConfig.getMinQueryCount(), taskConfig.getMinDurationMs(), data.outputFolder);
+          mode,
+          modelConfig.getScenario(),
+          taskConfig.getMinQueryCount(),
+          taskConfig.getMinDurationMs(),
+          data.outputFolder);
       replyWithUpdateMessage(messenger, "Finished running \"" + modelName + "\".", REPLY_UPDATE);
       replyWithCompleteMessage(
           messenger, modelName, runtime, driverWrapper.getLatency(), driverWrapper.getAccuracy());

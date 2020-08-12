@@ -56,7 +56,7 @@ message DatasetConfig {
     NONE = 0;
     IMAGENET = 1;
     COCO = 2;
-    MOBILEBERT = 3;
+    SQUAD = 3;
     ADE20K = 4;
   }
   required DatasetType type = 2;
@@ -86,4 +86,6 @@ message ModelConfig {
   optional int32 offset = 3 [default = 0];
   // Tags related to the models.
   optional string tags = 4;
+  // Custom scenario string to configure custom LoadGen parameter in mlperf_driver.cc .
+  optional string scenario = 5;
 }

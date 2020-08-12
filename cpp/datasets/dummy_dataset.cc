@@ -28,7 +28,7 @@ void DummyDataset::LoadSamplesToRam(
     const std::vector<QuerySampleIndex>& samples) {
   for (QuerySampleIndex sample_idx : samples) {
     switch (dataset_type_) {
-      case DatasetConfig::MOBILEBERT: {
+      case DatasetConfig::SQUAD: {
         // Input_ids is in range [0, 30000).
         std::vector<uint8_t>* input_ids =
             new std::vector<uint8_t>(input_format_[0].size * 4);

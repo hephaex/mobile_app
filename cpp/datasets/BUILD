@@ -75,3 +75,37 @@ cc_library(
         "@org_tensorflow//tensorflow/lite/tools/evaluation/stages:object_detection_average_precision_stage",
     ],
 )
+
+cc_library(
+    name = "squad",
+    srcs = ["squad.cc"],
+    hdrs = ["squad.h"],
+    deps = [
+        "//cpp:mlperf_driver",
+        "//cpp:utils",
+        "//cpp/datasets/squad_utils",
+    ] + select({
+        "@org_tensorflow//tensorflow:android": [
+            "@org_tensorflow//tensorflow/core:portable_tensorflow_lib_lite",
+        ],
+        "//conditions:default": [
+            "@org_tensorflow//tensorflow/core:framework",
+            "@org_tensorflow//tensorflow/core:lib",
+            "@org_tensorflow//tensorflow/core:protos_all_cc",
+        ],
+    }),
+)
+
+cc_library(
+    name = "ade20k",
+    srcs = ["ade20k.cc"],
+    hdrs = ["ade20k.h"],
+    deps = [
+        "//cpp:mlperf_driver",
+        "//cpp:utils",
+        "@org_tensorflow//tensorflow/lite/kernels:kernel_util",
+        "@org_tensorflow//tensorflow/lite/tools/evaluation:utils",
+        "@org_tensorflow//tensorflow/lite/tools/evaluation/proto:evaluation_stages_cc_proto",
+        "@org_tensorflow//tensorflow/lite/tools/evaluation/stages:image_preprocessing_stage",
+    ],
+)

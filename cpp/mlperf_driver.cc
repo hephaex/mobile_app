@@ -51,18 +51,31 @@ void MlperfDriver::IssueQuery(
   ::mlperf::QuerySamplesComplete(responses.data(), responses.size());
 }
 
-void MlperfDriver::RunMLPerfTest(const std::string& mode, int min_query_count,
-                                 int min_duration,
+void MlperfDriver::RunMLPerfTest(const std::string& mode,
+                                 const std::string& scenario,
+                                 int min_query_count, int min_duration,
                                  const std::string& output_dir) {
   // Setting the mlperf configs.
   ::mlperf::TestSettings mlperf_settings;
-  mlperf_settings.scenario = ::mlperf::TestScenario::SingleStream;
-  mlperf_settings.single_stream_expected_latency_ns = 1000000;
-  mlperf_settings.min_query_count = min_query_count;
-  mlperf_settings.min_duration_ms = min_duration;
   ::mlperf::LogSettings log_settings;
   log_settings.log_output.outdir = output_dir;
   log_settings.log_output.copy_summary_to_stdout = true;
+
+  if (scenario == kMobilenetOfflineScenario) {
+    mlperf_settings.scenario = ::mlperf::TestScenario::Offline;
+    mlperf_settings.performance_sample_count_override =
+        kMobilenetOfflineSampleCount;
+    mlperf_settings.min_duration_ms = kMobilenetOfflineMinDurationMs;
+    mlperf_settings.offline_expected_qps = kMobilenetOfflineExpectedQps;
+    mlperf_settings.mode = TestMode::PerformanceOnly;
+    ::mlperf::StartTest(this, dataset_.get(), mlperf_settings, log_settings);
+    return;
+  } else {
+    mlperf_settings.scenario = ::mlperf::TestScenario::SingleStream;
+    mlperf_settings.single_stream_expected_latency_ns = 1000000;
+    mlperf_settings.min_duration_ms = min_duration;
+    mlperf_settings.min_query_count = min_query_count;
+  }
 
   // Start the test.
   switch (Str2TestMode(mode)) {
